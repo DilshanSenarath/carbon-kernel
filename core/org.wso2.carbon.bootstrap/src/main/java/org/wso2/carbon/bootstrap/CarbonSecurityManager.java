@@ -18,9 +18,6 @@
 
 package org.wso2.carbon.bootstrap;
 
-import java.security.AccessControlContext;
-import java.security.AccessControlException;
-import java.security.Policy;
 import java.util.ArrayList;
 import java.util.List;
 
