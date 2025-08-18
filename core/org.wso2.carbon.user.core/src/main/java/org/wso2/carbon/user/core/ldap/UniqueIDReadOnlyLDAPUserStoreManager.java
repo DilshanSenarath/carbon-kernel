@@ -61,6 +61,7 @@ import java.nio.ByteBuffer;
 import java.text.MessageFormat;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -183,6 +184,10 @@ public class UniqueIDReadOnlyLDAPUserStoreManager extends ReadOnlyLDAPUserStoreM
     private static final Pattern TWO_DIGIT_FRACTION_TIMESTAMP_PATTERN =
             Pattern.compile("^\\d{14}[,\\.]\\d{2}([-+]\\d{4}|Z)$");
     private static final Pattern ONE_DIGIT_FRACTION_TIMESTAMP_PATTERN =
+            Pattern.compile("^\\d{12}[,\\.]\\d{1}([-+]\\d{4}|Z)$");
+    private static final Pattern ONE_DIGIT_FRACTION_WITH_SECONDS_TIMESTAMP_PATTERN =
+            Pattern.compile("^\\d{14}[,\\.]\\d{1}([-+]\\d{4}|Z)$");
+    private static final Pattern ONE_DIGIT_FRACTION_WITH_MINUTES_TIMESTAMP_PATTERN =
             Pattern.compile("^\\d{12}[,\\.]\\d{1}([-+]\\d{4}|Z)$");
 
     static {
@@ -4054,12 +4059,28 @@ public class UniqueIDReadOnlyLDAPUserStoreManager extends ReadOnlyLDAPUserStoreM
             return dateTimestamp;
         }
         String userstoreTimestampFormat = realmConfig.getUserStoreProperty(dateAndTimePattern);
-        if (StringUtils.isBlank(userstoreTimestampFormat)) {
-            userstoreTimestampFormat = DEFAULT_LDAP_TIME_FORMATS_PATTERN;
+        if (StringUtils.isNotBlank(userstoreTimestampFormat) &&
+                !StringUtils.equals(userstoreTimestampFormat, DEFAULT_LDAP_TIME_FORMATS_PATTERN)) {
+            try {
+                return OffsetDateTime.parse(dateTimestamp, DateTimeFormatter.ofPattern(userstoreTimestampFormat))
+                        .toInstant()
+                        .toString();
+            } catch (DateTimeParseException e) {
+                throw new UserStoreException("Invalid timestamp format for pattern: " + userstoreTimestampFormat, e);
+            }
         }
-        DateTimeFormatter f = DateTimeFormatter.ofPattern(userstoreTimestampFormat);
-        OffsetDateTime odt = OffsetDateTime.parse(dateTimestamp, f);
-        return  (odt.toInstant()).toString();
+
+        String derivedTimeStampPattern = deriveTimestampFormat(dateTimestamp);
+        if (StringUtils.isNotBlank(derivedTimeStampPattern)) {
+            try {
+                return OffsetDateTime.parse(dateTimestamp, DateTimeFormatter.ofPattern(derivedTimeStampPattern))
+                        .toInstant()
+                        .toString();
+            } catch (DateTimeParseException e) {
+                throw new UserStoreException("Invalid timestamp format for pattern: " + derivedTimeStampPattern, e);
+            }
+        }
+        throw new UserStoreException("Unsupported LDAP timestamp format: " + dateTimestamp);
     }
 
     /**
@@ -4377,8 +4398,6 @@ public class UniqueIDReadOnlyLDAPUserStoreManager extends ReadOnlyLDAPUserStoreM
 
     /**
      * Infers the LDAP group timestamp format from a sample LDAP entry.
-     * The patterns checked here correspond to formats defined in DEFAULT_LDAP_TIME_FORMATS_PATTERN
-     * ("[uuuuMMddHHmmss[,SSS][.SSS]X][uuuuMMddHHmmss[,SS][.SS]X][uuuuMMddHHmm[,S][.S]X]").
      *
      * @param answer                 A NamingEnumeration containing LDAP search results.
      * @param timestampAttributeName The LDAP attribute name containing the timestamp.
@@ -4393,25 +4412,47 @@ public class UniqueIDReadOnlyLDAPUserStoreManager extends ReadOnlyLDAPUserStoreM
             Attribute attr = sr.getAttributes().get(timestampAttributeName);
             if (attr != null) {
                 String sampleTimestamp = (String) attr.get();
-                // Case 1: 14 digits with no fractional seconds, e.g. 20250130083725Z or with offset ±HHMM
-                if (NO_FRACTION_TIMESTAMP_PATTERN.matcher(sampleTimestamp).matches()) {
-                    return "uuuuMMddHHmmssX";
-                }
-                // Case 2: 14 digits with 3-digit fraction (comma or period), e.g. 20250130083725,801Z
-                // or 20250130083725.801Z
-                else if (THREE_DIGIT_FRACTION_TIMESTAMP_PATTERN.matcher(sampleTimestamp).matches()) {
-                    return sampleTimestamp.contains(",") ? "uuuuMMddHHmmss,SSSX" : "uuuuMMddHHmmss.SSSX";
-                }
-                // Case 3: 14 digits with 2-digit fraction, e.g. 20250130083725,80Z or 20250130083725.80Z
-                else if (TWO_DIGIT_FRACTION_TIMESTAMP_PATTERN.matcher(sampleTimestamp).matches()) {
-                    return sampleTimestamp.contains(",") ? "uuuuMMddHHmmss,SSX" : "uuuuMMddHHmmss.SSX";
-                }
-                // Case 4: 12 digits (up to minute) with 1-digit fraction, e.g. 202501300837,8Z or 202501300837.8Z
-                else if (ONE_DIGIT_FRACTION_TIMESTAMP_PATTERN.matcher(sampleTimestamp).matches()) {
-                    return sampleTimestamp.contains(",") ? "uuuuMMddHHmm,SX" : "uuuuMMddHHmm.SX";
-                }
+                return deriveTimestampFormat(sampleTimestamp);
             }
         }
+        return null;
+    }
+
+    /**
+     * Derives the timestamp format based on the provided timestamp string.
+     * The patterns checked here correspond to formats defined in DEFAULT_LDAP_TIME_FORMATS_PATTERN
+     * ("[uuuuMMddHHmmss[,SSS][.SSS]X][uuuuMMddHHmmss[,SS][.SS]X][uuuuMMddHHmm[,S][.S]X]").
+     *
+     * @param timestamp The timestamp string to analyze.
+     * @return The derived timestamp format, or null if no matching format is found.
+     */
+    private static String deriveTimestampFormat(String timestamp) {
+
+        if (StringUtils.isBlank(timestamp)) {
+            return null;
+        }
+
+        // Case 1: 14 digits with no fractional seconds.
+        if (NO_FRACTION_TIMESTAMP_PATTERN.matcher(timestamp).matches()) {
+            return "uuuuMMddHHmmssX";
+        }
+        // Case 2: 14 digits with 3-digit fraction.
+        else if (THREE_DIGIT_FRACTION_TIMESTAMP_PATTERN.matcher(timestamp).matches()) {
+            return timestamp.contains(",") ? "uuuuMMddHHmmss,SSSX" : "uuuuMMddHHmmss.SSSX";
+        }
+        // Case 3: 14 digits with 2-digit fraction.
+        else if (TWO_DIGIT_FRACTION_TIMESTAMP_PATTERN.matcher(timestamp).matches()) {
+            return timestamp.contains(",") ? "uuuuMMddHHmmss,SSX" : "uuuuMMddHHmmss.SSX";
+        }
+        // Case 4: 14 digits with 1-digit fraction (seconds precision).
+        else if (ONE_DIGIT_FRACTION_WITH_SECONDS_TIMESTAMP_PATTERN.matcher(timestamp).matches()) {
+            return timestamp.contains(",") ? "uuuuMMddHHmmss,SX" : "uuuuMMddHHmmss.SX";
+        }
+        // Case 5: 12 digits with 1-digit fraction (minutes precision).
+        else if (ONE_DIGIT_FRACTION_WITH_MINUTES_TIMESTAMP_PATTERN.matcher(timestamp).matches()) {
+            return timestamp.contains(",") ? "uuuuMMddHHmm,SX" : "uuuuMMddHHmm.SX";
+        }
+
         return null;
     }
 }
