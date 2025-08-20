@@ -446,6 +446,7 @@
         <axiom.osgi.version.range>[1.2.11, 1.3.0)</axiom.osgi.version.range>
         <commons-text.orbit.version>1.10.0.wso2v2</commons-text.orbit.version>
         <commons-lang3.orbit.version>3.18.0.wso2v1</commons-lang3.orbit.version>
+        <commons-lang3.version>3.18.0</commons-lang3.version>
 
 
         <!-- Spring Framework -->
@@ -1269,6 +1270,11 @@
                 <groupId>commons-lang.wso2</groupId>
                 <artifactId>commons-lang</artifactId>
                 <version>${orbit.version.commons.lang}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons-lang3.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.wso2.orbit.org.apache.commons</groupId>

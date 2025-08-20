@@ -131,6 +131,7 @@
                 <include>org.codehaus.woodstox:woodstox-core-asl</include>
                 <include>org.codehaus.woodstox:stax2-api</include>
                 <include>org.wso2.carbon:org.wso2.carbon.server:jar</include>
+                <include>org.apache.commons:commons-lang3:jar</include>
                 <include>org.wso2.config.mapper:config-mapper:jar</include>
                 <include>net.consensys.cava:cava-toml:jar</include>
                 <include>org.apache.logging.log4j:log4j-api:jar</include>
@@ -144,7 +145,6 @@
                 <include>com.google.guava:guava:jar</include>
                 <include>org.slf4j:slf4j-api:jar</include>
                 <include>org.jsoup:jsoup:jar</include>
-                <include>org.apache.commons:commons-lang3:jar</include>
                 <include>com.fasterxml.jackson.core:jackson-core:jar</include>
                 <include>com.fasterxml.jackson.core:jackson-databind:jar</include>
                 <include>com.fasterxml.jackson.core:jackson-annotations:jar</include>
