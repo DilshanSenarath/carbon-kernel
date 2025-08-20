@@ -75,6 +75,12 @@
         <filter-class>org.owasp.csrfguard.CsrfGuardFilter</filter-class>
     </filter>
 
+    <!-- Filter to avoid path traversal -->
+    <filter>
+        <filter-name>PathTraversalFilter</filter-name>
+        <filter-class>org.wso2.carbon.tomcat.ext.filter.PathTraversalFilter</filter-class>
+    </filter>
+
     <!-- Tomcat http header security filter -->
     <filter>
         <filter-name>HttpHeaderSecurityFilter</filter-name>
@@ -89,6 +95,11 @@
         <filter-name>URLBasedCachePreventionFilter</filter-name>
         <filter-class>org.wso2.carbon.tomcat.ext.filter.URLBasedCachePreventionFilter</filter-class>
     </filter>
+
+    <filter-mapping>
+        <filter-name>PathTraversalFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
 
     <filter-mapping>
         <filter-name>HttpHeaderSecurityFilter</filter-name>
