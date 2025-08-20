@@ -316,6 +316,11 @@
         <DeploymentUpdateInterval>15</DeploymentUpdateInterval>
 
         <!--
+          Disable registering admin services.
+        -->
+        <DisableAdminServices>true</DisableAdminServices>
+
+        <!--
             Location of the main Axis2 configuration descriptor file, a.k.a. axis2.xml file
 
             This can be a file on the local file system, or a URL

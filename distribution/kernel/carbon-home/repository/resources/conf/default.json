@@ -10,6 +10,7 @@
   "server.max_items_per_page": "100",
   "server.enable_shutdown_from_api": false,
   "server.enable_restart_from_api": false,
+  "server.disable_admin_services": true,
   "user_store.type": "database",
   "super_admin.admin_role": "admin",
   "everyone.rolename": "everyone",

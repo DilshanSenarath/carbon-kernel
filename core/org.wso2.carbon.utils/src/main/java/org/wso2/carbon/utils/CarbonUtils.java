@@ -1258,6 +1258,17 @@ public class CarbonUtils {
      }
 
     /**
+     * Check if admin services are disabled or not.
+     * Enabled by default for latest IS versions.
+     * @return disableAdminServices.
+     */
+    public static boolean disableAdminServices() {
+
+        return Boolean.parseBoolean(ServerConfiguration.getInstance()
+                .getFirstProperty(ServerConfiguration.AXIS2_CONFIG_DISABLE_ADMIN_SERVICES));
+    }
+
+    /**
      * utility method to check whether deployment synchronizer enabled.
      * @return
      */

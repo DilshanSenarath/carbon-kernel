@@ -36,7 +36,7 @@
         session.setAttribute(CarbonConstants.SERVER_URL, serverURL);
     }
 
-    boolean isMCEnabled = !Boolean.parseBoolean(System.getProperty("optimize"));
+    boolean isMCEnabled = !Boolean.parseBoolean(System.getProperty("optimize")) && !CarbonUtils.disableAdminServices();
 %>
 <!--[IF IE 7]>
 	<style>
