@@ -30,9 +30,20 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class OperationScopeValidationContext {
 
+    private String apiIdentifier;
     private boolean validationRequired;
     private List<String> validatedScopes;
     private Map<String, String> operationScopeMap = new ConcurrentHashMap<>();
+
+    public String getApiIdentifier() {
+
+        return apiIdentifier;
+    }
+
+    public void setApiIdentifier(String apiIdentifier) {
+
+        this.apiIdentifier = apiIdentifier;
+    }
 
     public boolean isValidationRequired() {
 
