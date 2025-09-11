@@ -175,10 +175,10 @@ public class CustomQueryTest  extends BaseTestCase {
     public void test3QueryAsParameter() throws RegistryException {
         Resource r1 = registry.newResource();
         r1.setContent("r1 content");
-        registry.put("/test/comments/r1", r1);
+        registry.put("/target/test/comments/r1", r1);
 
-        registry.addComment("/test/comments/r1", new Comment("commentXX1 on this resource :)"));
-        registry.addComment("/test/comments/r1", new Comment("commentXX2 on this resource :)"));
+        registry.addComment("/target/test/comments/r1", new Comment("commentXX1 on this resource :)"));
+        registry.addComment("/target/test/comments/r1", new Comment("commentXX2 on this resource :)"));
 
         String sql = "SELECT REG_COMMENT_ID FROM REG_COMMENT C, REG_RESOURCE_COMMENT RC " +
                 "WHERE C.REG_COMMENT_TEXT LIKE ? AND C.REG_ID=RC.REG_COMMENT_ID";
@@ -188,7 +188,7 @@ public class CustomQueryTest  extends BaseTestCase {
         params.put(RegistryConstants.RESULT_TYPE_PROPERTY_NAME,
                 RegistryConstants.COMMENTS_RESULT_TYPE);
         params.put("1", "commentXX1%");
-        Collection qResults = registry.executeQuery("/test/qap", params);
+        Collection qResults = registry.executeQuery("/target/test/qap", params);
 
         String[] qPaths = (String[]) qResults.getContent();
 
@@ -200,16 +200,16 @@ public class CustomQueryTest  extends BaseTestCase {
 
         Resource r1 = registry.newResource();
         r1.setContent("r1x content");
-        registry.put("/test/comments/r1x", r1);
+        registry.put("/target/test/comments/r1x", r1);
 
         try {
-            registry.addComment("/test/comments/r1x", new Comment("commentXX1 on this resource :)"));
+            registry.addComment("/target/test/comments/r1x", new Comment("commentXX1 on this resource :)"));
             Thread.sleep(2000);
-            registry.addComment("/test/comments/r1x", new Comment("commentXX2 on this resource :)"));
+            registry.addComment("/target/test/comments/r1x", new Comment("commentXX2 on this resource :)"));
             Thread.sleep(2000);
-            registry.addComment("/test/comments/r1x", new Comment("commentXX3 on this resource :)"));
+            registry.addComment("/target/test/comments/r1x", new Comment("commentXX3 on this resource :)"));
             Thread.sleep(2000);
-            registry.addComment("/test/comments/r1x", new Comment("a new test comment"));
+            registry.addComment("/target/test/comments/r1x", new Comment("a new test comment"));
             Thread.sleep(2000);
         } catch (InterruptedException e) {
             throw new RegistryException("Error adding comments to resource", e);
@@ -226,12 +226,12 @@ public class CustomQueryTest  extends BaseTestCase {
         comQuery.addProperty(RegistryConstants.RESULT_TYPE_PROPERTY_NAME,
                 RegistryConstants.COMMENTS_RESULT_TYPE);
 
-        configSystemRegistry.put("/test/comments/q1", comQuery);
+        configSystemRegistry.put("/target/test/comments/q1", comQuery);
 
         Map<String, String> params = new HashMap<String, String>();
         params.put("1", "%comment%");
         params.put("2", "r1x");
-        Collection qResults = registry.executeQuery("/test/comments/q1", params);
+        Collection qResults = registry.executeQuery("/target/test/comments/q1", params);
 
         String[] qPaths = (String[]) qResults.getContent();
 
@@ -264,15 +264,15 @@ public class CustomQueryTest  extends BaseTestCase {
 
         Resource r2 = registry.newResource();
         r2.setContent("r2 content");
-        registry.put("/test/comments/r2", r2);
+        registry.put("/target/test/comments/r2", r2);
         try {
-            registry.addComment("/test/comments/r2", new Comment("commentXX1 on this resource :)"));
+            registry.addComment("/target/test/comments/r2", new Comment("commentXX1 on this resource :)"));
             Thread.sleep(2000);
-            registry.addComment("/test/comments/r2", new Comment("commentXX2 on this resource :)"));
+            registry.addComment("/target/test/comments/r2", new Comment("commentXX2 on this resource :)"));
             Thread.sleep(2000);
-            registry.addComment("/test/comments/r2", new Comment("commentXX3 on this resource :)"));
+            registry.addComment("/target/test/comments/r2", new Comment("commentXX3 on this resource :)"));
             Thread.sleep(2000);
-            registry.addComment("/test/comments/r2", new Comment("a new test comment"));
+            registry.addComment("/target/test/comments/r2", new Comment("a new test comment"));
             Thread.sleep(2000);
         } catch (InterruptedException e) {
             throw new RegistryException("Sleep Thread Interrupted", e);
@@ -288,14 +288,14 @@ public class CustomQueryTest  extends BaseTestCase {
         comQuery.addProperty(RegistryConstants.RESULT_TYPE_PROPERTY_NAME,
                 RegistryConstants.COMMENTS_RESULT_TYPE);
 
-        configSystemRegistry.put("/test/comments/q1", comQuery);
+        configSystemRegistry.put("/target/test/comments/q1", comQuery);
 
         params = new HashMap<String, String>();
         params.put("1", "%comment%");
         params.put("2", "r2");
         params.put("3", "1");
         params.put("4", "4");
-        qResults = registry.executeQuery("/test/comments/q1", params);
+        qResults = registry.executeQuery("/target/test/comments/q1", params);
 
         qPaths = (String[]) qResults.getContent();
 
@@ -331,15 +331,15 @@ public class CustomQueryTest  extends BaseTestCase {
         Resource r1 = rootSystemRegistry.newResource();
         r1.setDescription("r1 content");
         r1.setContent("r1 content");
-        rootSystemRegistry.put("/test/resources/rx1", r1);
+        rootSystemRegistry.put("/target/test/resources/rx1", r1);
         Resource r2 = rootSystemRegistry.newResource();
         r2.setDescription("rq content");
         r2.setContent("r2 content");
-        rootSystemRegistry.put("/test/resources/rx2", r2);
+        rootSystemRegistry.put("/target/test/resources/rx2", r2);
         Resource r0 = rootSystemRegistry.newResource();
         r0.setDescription("r0 content");
         r0.setContent("r0 content");
-        rootSystemRegistry.put("/test/resources/rx0", r0);
+        rootSystemRegistry.put("/target/test/resources/rx0", r0);
 
         Resource comQuery = rootSystemRegistry.newResource();
         String sql = "SELECT REG_PATH_ID, REG_NAME FROM REG_RESOURCE R " +
@@ -349,18 +349,18 @@ public class CustomQueryTest  extends BaseTestCase {
 
         comQuery.setMediaType(RegistryConstants.SQL_QUERY_MEDIA_TYPE);
 
-        rootSystemRegistry.put("/test/resources/q1", comQuery);
+        rootSystemRegistry.put("/target/test/resources/q1", comQuery);
 
         Map<String, String> params = new HashMap<String, String>();
         params.put("1", "%content");
-        Collection qResults = rootSystemRegistry.executeQuery("/test/resources/q1", params);
+        Collection qResults = rootSystemRegistry.executeQuery("/target/test/resources/q1", params);
 
         String[] qPaths = (String[]) qResults.getContent();
 
         assertEquals("Query result count should be 3", qPaths.length, 3);
-        assertEquals("Comment query result is invalid", qPaths[0], "/test/resources/rx0");
-        assertEquals("Comment query result is invalid", qPaths[1], "/test/resources/rx2");
-        assertEquals("Comment query result is invalid", qPaths[2], "/test/resources/rx1");
+        assertEquals("Comment query result is invalid", qPaths[0], "/target/test/resources/rx0");
+        assertEquals("Comment query result is invalid", qPaths[1], "/target/test/resources/rx2");
+        assertEquals("Comment query result is invalid", qPaths[2], "/target/test/resources/rx1");
 
         comQuery = rootSystemRegistry.newResource();
         sql = "SELECT REG_PATH_ID, REG_NAME FROM REG_RESOURCE R " +
@@ -370,24 +370,24 @@ public class CustomQueryTest  extends BaseTestCase {
 
         comQuery.setMediaType(RegistryConstants.SQL_QUERY_MEDIA_TYPE);
 
-        rootSystemRegistry.put("/test/resources/q1", comQuery);
+        rootSystemRegistry.put("/target/test/resources/q1", comQuery);
 
         params = new HashMap<String, String>();
 
-        qResults = rootSystemRegistry.executeQuery("/test/resources/q1", params);
+        qResults = rootSystemRegistry.executeQuery("/target/test/resources/q1", params);
 
         qPaths = (String[]) qResults.getContent();
 
         List<String> paths = new LinkedList<String>();
         for (String temp : qPaths) {
-            if (temp.startsWith("/test/resources/rx")) {
+            if (temp.startsWith("/target/test/resources/rx")) {
                 paths.add(temp);
             }
         }
         qPaths = paths.toArray(new String[paths.size()]);
 
-        assertEquals("Comment query result is invalid", qPaths[0], "/test/resources/rx0");
-        assertEquals("Comment query result is invalid", qPaths[1], "/test/resources/rx2");
-        assertEquals("Comment query result is invalid", qPaths[2], "/test/resources/rx1");
+        assertEquals("Comment query result is invalid", qPaths[0], "/target/test/resources/rx0");
+        assertEquals("Comment query result is invalid", qPaths[1], "/target/test/resources/rx2");
+        assertEquals("Comment query result is invalid", qPaths[2], "/target/test/resources/rx1");
     }
 }

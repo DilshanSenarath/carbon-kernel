@@ -18,6 +18,9 @@
             <testResource>
                 <directory>${project.basedir}/target/resources</directory>
             </testResource>
+            <testResource>
+                <directory>${project.build.directory}/test-resources</directory>
+            </testResource>
         </testResources>
         <plugins>
             <plugin>
@@ -297,7 +300,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>src/test/resources/client/modules
+                            <outputDirectory>${project.build.directory}/test-resources/client/modules
                             </outputDirectory>
                             <resources>
                                 <resource>

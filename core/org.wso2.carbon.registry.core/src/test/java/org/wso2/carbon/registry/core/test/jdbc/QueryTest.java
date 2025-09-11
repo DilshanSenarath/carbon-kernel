@@ -58,11 +58,11 @@ public class QueryTest extends BaseTestCase {
         Registry rootRegistry = embeddedRegistryService.getSystemRegistry();
         Resource r1 = rootRegistry.newResource();
         r1.setContent("r1 content");
-        rootRegistry.put("/test/comments/r1", r1);
+        rootRegistry.put("/target/test/comments/r1", r1);
 
-        rootRegistry.addComment("/test/comments/r1",
+        rootRegistry.addComment("/target/test/comments/r1",
                 new Comment("backward-compatibility1 on this resource :)"));
-        rootRegistry.addComment("/test/comments/r1",
+        rootRegistry.addComment("/target/test/comments/r1",
                 new Comment("backward-compatibility2 on this resource :)"));
 
         String sql = "SELECT REG_COMMENT_ID FROM REG_COMMENT C, REG_RESOURCE_COMMENT RC " +
