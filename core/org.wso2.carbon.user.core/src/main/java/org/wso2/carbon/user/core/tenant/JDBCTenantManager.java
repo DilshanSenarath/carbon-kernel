@@ -1548,7 +1548,13 @@ public class JDBCTenantManager implements TenantManager {
                     return true;
                 }
             } catch (SQLException e) {
-                // Ignore since this exception is thrown when the column isn not available.
+                log.debug("Expected exception: Column 'UM_TENANT_UUID' not found in table 'UM_TENANT'.", e);
+                try {
+                    // Rollback the connection to avoid returning aborted connection to the pool.
+                    connection.rollback();
+                } catch (SQLException ex) {
+                    log.error("Error while rolling back transaction.", ex);
+                }
                 return false;
             }
         } catch (SQLException e) {
@@ -1587,7 +1593,13 @@ public class JDBCTenantManager implements TenantManager {
                     return true;
                 }
             } catch (SQLException e) {
-                // Ignore since this exception is thrown when the column is not available.
+                log.debug("Expected exception: Column 'UM_ORG_UUID' not found in table 'UM_TENANT'.", e);
+                try {
+                    // Rollback the connection to avoid returning aborted connection to the pool.
+                    connection.rollback();
+                } catch (SQLException ex) {
+                    log.error("Error while rolling back transaction.", ex);
+                }
                 return false;
             }
         } catch (SQLException e) {
