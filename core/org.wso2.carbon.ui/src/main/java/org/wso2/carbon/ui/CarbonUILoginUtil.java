@@ -580,7 +580,6 @@ public final class CarbonUILoginUtil {
     protected static int handleLoginPageRequest(String requestedURI, HttpServletRequest request,
             HttpServletResponse response, boolean authenticated, String context, String indexPageURL)
             throws IOException {
-        boolean isTryIt = requestedURI.indexOf("admin/jsp/WSRequestXSSproxy_ajaxprocessor.jsp") > -1;
         boolean isFileDownload = requestedURI.endsWith("/filedownload");
         if ((requestedURI.indexOf("login.jsp") > -1
                 || requestedURI.indexOf("login_ajaxprocessor.jsp") > -1
@@ -588,9 +587,7 @@ public final class CarbonUILoginUtil {
                 || isFileDownload
                 || requestedURI.endsWith("/fileupload")
                 || requestedURI.indexOf("/fileupload/") > -1
-                || requestedURI.indexOf("login_action.jsp") > -1
-                || isTryIt
-                || requestedURI.indexOf("tryit/JAXRSRequestXSSproxy_ajaxprocessor.jsp") > -1)
+                || requestedURI.indexOf("login_action.jsp") > -1)
                 && !requestedURI.contains(";")) {
 
             if ((requestedURI.indexOf("login.jsp") > -1
@@ -613,7 +610,7 @@ public final class CarbonUILoginUtil {
                 response.sendRedirect(CarbonUIUtil.resolveAdminConsoleBaseURL(context, "/carbon/admin/index.jsp",
                         request));
                 return RETURN_FALSE;
-            } else if ((isTryIt || isFileDownload) && !authenticated) {
+            } else if (isFileDownload && !authenticated) {
                 if (isFileDownload) {
                     response.sendRedirect(CarbonUIUtil.resolveAdminConsoleBaseURL(context, "/carbon/admin/index.jsp",
                             request));

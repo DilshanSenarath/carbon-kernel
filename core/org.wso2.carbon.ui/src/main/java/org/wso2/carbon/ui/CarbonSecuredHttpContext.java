@@ -386,8 +386,6 @@ public class CarbonSecuredHttpContext extends SecuredComponentEntryHttpContext {
                     || requestedURI.endsWith(".ico") || requestedURI.endsWith("/filedownload")
                     || requestedURI.endsWith("/fileupload")
                     || requestedURI.contains("/fileupload/")
-                    || requestedURI.contains("admin/jsp/WSRequestXSSproxy_ajaxprocessor.jsp")
-                    || requestedURI.contains("tryit/JAXRSRequestXSSproxy_ajaxprocessor.jsp")
                     || requestedURI.contains("registry/atom")
                     || requestedURI.contains("registry/tags") || requestedURI.contains("gadgets/")
                     || requestedURI.contains("registry/resource")) {

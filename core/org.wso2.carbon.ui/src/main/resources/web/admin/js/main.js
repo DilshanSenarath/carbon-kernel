@@ -1602,10 +1602,6 @@ function alternateTableRows(id, evenStyle, oddStyle) {
     }
 }
 
-function getProxyAddress() {
-        return "../admin/jsp/WSRequestXSSproxy_ajaxprocessor.jsp";
-}
-
 function validatePasswordOnCreation(fld1name, fld2name, regString) {
     var error = "";
     var pw1 = document.getElementsByName(fld1name)[0].value;
