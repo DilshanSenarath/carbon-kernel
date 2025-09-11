@@ -17,7 +17,6 @@
 package org.wso2.carbon.server.admin.module.handler;
 
 import org.apache.axis2.AxisFault;
-import org.apache.axis2.Constants;
 import org.apache.axis2.context.MessageContext;
 import org.apache.axis2.description.AxisOperation;
 import org.apache.axis2.description.AxisService;
@@ -37,6 +36,7 @@ import org.wso2.carbon.utils.ServerConstants;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.util.List;
 
 import static org.wso2.carbon.utils.CarbonUtils.isEnableV2AuditLogs;
 
@@ -48,9 +48,17 @@ public class AuthorizationHandler extends AbstractHandler {
 
     private static Log log = LogFactory.getLog(AuthorizationHandler.class.getClass());
     private static Log audit = CarbonConstants.AUDIT_LOG;
+    private static final String DEFAULT_ACTION_PERMISSION = "/permission/admin/login";
 
     public InvocationResponse invoke(MessageContext msgContext) throws AxisFault {
-        if (this.callToGeneralService(msgContext) || skipAuthentication(msgContext) ) {
+
+        Boolean isAuthEnabledAtConfigLevel = AccessControlUtil.isAuthenticationEnabledAtConfigurationLevel(msgContext);
+        // If <AuthenticationEnabled> is not defined at service access control proceed with server.xml checks.
+        // But if <AuthenticationEnabled> is defined and it is false continue the Invocation.
+        if ( isAuthEnabledAtConfigLevel == null
+                && (this.callToGeneralService(msgContext) || skipAuthentication(msgContext))) {
+            return InvocationResponse.CONTINUE;
+        } else if (Boolean.FALSE.equals(isAuthEnabledAtConfigLevel)) {
             return InvocationResponse.CONTINUE;
         }
         if(CarbonUtils.isWorkerNode()){  // You are not allowed to invoke admin services on worker nodes
@@ -67,7 +75,7 @@ public class AuthorizationHandler extends AbstractHandler {
         String opName = operation.getName().getLocalPart();
 
         Parameter actionParam = operation.getParameter("AuthorizationAction");
-        if (actionParam == null) {
+        if (isAuthEnabledAtConfigLevel == null && actionParam == null) {
             if (!isEnableV2AuditLogs()) {
                 audit.warn("Unauthorized call by tenant " + carbonCtx.getTenantDomain() +
                         ",user " + carbonCtx.getUsername() + " to service:" + service.getName() +
@@ -78,9 +86,14 @@ public class AuthorizationHandler extends AbstractHandler {
         }
 
         String serviceName = service.getName();
+        String action;
 
         try {
-            String action = ((String) actionParam.getValue()).trim();
+            if (actionParam == null || actionParam.getValue() == null) {
+                action = DEFAULT_ACTION_PERMISSION;
+            } else {
+                action = ((String) actionParam.getValue()).trim();
+            }
             String authzResourceId = null;
             String authzAction = null;
 
@@ -119,11 +132,18 @@ public class AuthorizationHandler extends AbstractHandler {
                                         ServerConstants.AUTHORIZATION_FAULT_CODE);
                 }
 
-                resourceId = resourceId.trim();
+                List<String> resourcePermissionsFromConfiguration =
+                        AccessControlUtil.getAuthorizationPermissionsFromConfigLevel(serviceName, opName);
+                if (resourcePermissionsFromConfiguration != null && !resourcePermissionsFromConfiguration.isEmpty()) {
+                    resourceId = String.join(",", resourcePermissionsFromConfiguration);
+                }
+                if (resourceId != null && !resourceId.trim().isEmpty()) {
+                    resourceId = resourceId.trim();
+                }
                 AuthorizationManager authMan = realm.getAuthorizationManager();
                 if (!isAuthorized(authMan, username, resourceId, action)) {
                     log.error("Access Denied. Failed authorization attempt to access service '"
-                              + serviceName + "' operation '" + opName + "' by '" + username + "'");
+                            + serviceName + "' operation '" + opName + "' by '" + username + "'");
                     AxisFault afault = new AxisFault("Access Denied.");
                     afault.setFaultCode(ServerConstants.AUTHORIZATION_FAULT_CODE);
                     throw afault;
@@ -163,11 +183,11 @@ public class AuthorizationHandler extends AbstractHandler {
     
     
     private boolean skipAuthentication(MessageContext msgContext) {
-        boolean skipAuth  = false;
+        boolean skipAuth = false;
         AxisOperation operation = msgContext.getAxisOperation();
         Parameter param = operation.getParameter("DoAuthentication");
         if (param != null && "false".equals(param.getValue())) {
-        	skipAuth = true;
+            skipAuth = true;
         }
         return skipAuth;
     }

@@ -17,6 +17,19 @@
 */
 package org.wso2.carbon.server.admin.internal;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLStreamException;
+import org.apache.axiom.om.OMElement;
+import org.apache.axiom.om.impl.builder.StAXOMBuilder;
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.context.ConfigurationContext;
 import org.apache.axis2.description.AxisModule;
@@ -31,6 +44,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.wso2.carbon.base.CarbonBaseUtils;
 import org.wso2.carbon.base.api.ServerConfigurationService;
 import org.wso2.carbon.core.services.authentication.BasicAccessAuthenticator;
 import org.wso2.carbon.core.services.authentication.CookieAuthenticator;
@@ -40,6 +54,8 @@ import org.wso2.carbon.registry.core.jdbc.dataaccess.JDBCDataAccessManager;
 import org.wso2.carbon.registry.core.service.RegistryService;
 import org.wso2.carbon.server.admin.auth.AuthenticatorServerRegistry;
 import org.wso2.carbon.server.admin.common.IServerAdmin;
+import org.wso2.carbon.server.admin.model.OperationAuthorization;
+import org.wso2.carbon.server.admin.model.ServiceAuthentication;
 import org.wso2.carbon.server.admin.service.ServerAdmin;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.ConfigurationContextService;
@@ -71,7 +87,6 @@ public class ServerAdminServiceComponent {
 
             //setUserManagerDriver(userRealmDefault);
             setRegistryDriver(dataHolder.getRegistryService());
-            
 
             // Registering new Authenticator. This change should be backward compatible as
             // isAuthenticated method handles the logic as same in AuthenticationAdmin.
@@ -103,6 +118,7 @@ public class ServerAdminServiceComponent {
                     new ServerAdminCommandProvider(),
                     null);
 
+            initializeServiceAuthenticationConfiguration();
             log.debug("ServerAdmin bundle is activated");
         } catch (Throwable e) {
             log.error("Failed to activate ServerAdmin bundle", e);
@@ -119,7 +135,7 @@ public class ServerAdminServiceComponent {
                 return;
             }
             MBeanRegistrar.registerMBean(new ServerAdmin());
-            registeredMBeans = true;        
+            registeredMBeans = true;
     }
 
     private void setRegistryDriver(RegistryService registry) {
@@ -151,7 +167,7 @@ public class ServerAdminServiceComponent {
         }
     }
 
-    @Reference(name = "registry.service", cardinality = ReferenceCardinality.MANDATORY, policy = ReferencePolicy.DYNAMIC, 
+    @Reference(name = "registry.service", cardinality = ReferenceCardinality.MANDATORY, policy = ReferencePolicy.DYNAMIC,
             unbind = "unsetRegistryService")
     protected void setRegistryService(RegistryService registryService) {
         dataHolder.setRegistryService(registryService);
@@ -162,7 +178,7 @@ public class ServerAdminServiceComponent {
         dataHolder.setRegistryDBDriver(null);
     }
 
-    @Reference(name = "user.realmservice.default", cardinality = ReferenceCardinality.MANDATORY, policy = ReferencePolicy.DYNAMIC, 
+    @Reference(name = "user.realmservice.default", cardinality = ReferenceCardinality.MANDATORY, policy = ReferencePolicy.DYNAMIC,
             unbind = "unsetRealmService")
     protected void setRealmService(RealmService realmService) {
         dataHolder.setRealmService(realmService);
@@ -173,7 +189,7 @@ public class ServerAdminServiceComponent {
         dataHolder.setUserManagerDBDriver(null);
     }
 
-    @Reference(name = "config.context.service", cardinality = ReferenceCardinality.MANDATORY, policy = ReferencePolicy.DYNAMIC, 
+    @Reference(name = "config.context.service", cardinality = ReferenceCardinality.MANDATORY, policy = ReferencePolicy.DYNAMIC,
             unbind = "unsetConfigurationContextService")
     protected void setConfigurationContextService(ConfigurationContextService contextService) {
         this.configContext = contextService.getServerConfigContext();
@@ -196,7 +212,7 @@ public class ServerAdminServiceComponent {
         dataHolder.setConfigContext(null);
     }
 
-    @Reference(name = "server.configuration", cardinality = ReferenceCardinality.MANDATORY, policy = ReferencePolicy.DYNAMIC, 
+    @Reference(name = "server.configuration", cardinality = ReferenceCardinality.MANDATORY, policy = ReferencePolicy.DYNAMIC,
             unbind = "unsetServerConfigurationService")
     protected void setServerConfigurationService(ServerConfigurationService serverConfiguration) {
         dataHolder.setServerConfig(serverConfiguration);
@@ -204,5 +220,99 @@ public class ServerAdminServiceComponent {
 
     protected void unsetServerConfigurationService(ServerConfigurationService serverConfiguration) {
         dataHolder.setServerConfig(null);
+    }
+
+    private static void initializeServiceAuthenticationConfiguration() throws IOException, XMLStreamException {
+
+        File serviceConfigFile = new File(CarbonBaseUtils.getServiceAccessControlFile());
+        if (serviceConfigFile.exists()) {
+            try (InputStream in = new FileInputStream(serviceConfigFile)) {
+                OMElement documentElement = new StAXOMBuilder(in).getDocumentElement();
+                if (documentElement != null) {
+                    OMElement enabled = documentElement.getFirstChildWithName(new QName("Enabled"));
+                    if (enabled == null || !Boolean.parseBoolean(enabled.getText())) {
+                        ServerAdminDataHolder.getInstance().setServiceAccessControlEnabled(false);
+                        // If service authentication is disabled, no need to read further configurations.
+                        return;
+                    }
+                    ServerAdminDataHolder.getInstance().setServiceAccessControlEnabled(true);
+                    Map<String, ServiceAuthentication> serviceAuthenticationMap = new HashMap<>();
+                    OMElement servicesElement = documentElement.getFirstChildWithName(new QName("Services"));
+                    if (servicesElement != null) {
+                        Iterator<OMElement> services = servicesElement.getChildrenWithLocalName("Service");
+                        if (services != null) {
+                            while (services.hasNext()) {
+                                OMElement serviceElement = services.next();
+                                List<String> serviceLevelPermissions = retrievePermissions(serviceElement);
+                                ServiceAuthentication serviceAuthentication = new ServiceAuthentication();
+                                serviceAuthentication.setPermissions(serviceLevelPermissions);
+                                OMElement serviceNameElement = serviceElement.getFirstChildWithName(new QName("Name"));
+                                serviceAuthentication.setServiceName(serviceNameElement.getText());
+                                OMElement authenticationEnabledElement =
+                                        serviceElement.getFirstChildWithName(new QName("AuthenticationEnabled"));
+                                serviceAuthentication.setAuthenticationEnabled(
+                                        Boolean.parseBoolean(authenticationEnabledElement.getText()));
+                                OMElement operationsElement =
+                                        serviceElement.getFirstChildWithName(new QName("Operations"));
+                                if (operationsElement != null) {
+                                    Iterator<OMElement> operationElements =
+                                            operationsElement.getChildrenWithLocalName("Operation");
+                                    if (operationElements != null) {
+                                        while (operationElements.hasNext()) {
+                                            OMElement operationElement = operationElements.next();
+                                            OperationAuthorization operationAuthorization =
+                                                    new OperationAuthorization();
+                                            String operationName =
+                                                    operationElement.getAttributeValue(new QName("name"));
+                                            OMElement authEnabledElement = operationElement
+                                                    .getFirstChildWithName(new QName("AuthenticationEnabled"));
+                                            if (authEnabledElement != null) {
+                                                operationAuthorization.setAuthenticationEnabled(
+                                                        Boolean.parseBoolean(authEnabledElement.getText()));
+                                            }
+                                            operationAuthorization.setResource(operationName);
+                                            List<String> permissions = retrievePermissions(operationElement);
+                                            operationAuthorization.setPermissions(permissions);
+                                            serviceAuthentication.getOperationAuthMap().put(
+                                                    operationAuthorization.getResource(), operationAuthorization);
+                                        }
+                                    }
+                                }
+                                serviceAuthenticationMap.put(serviceAuthentication.getServiceName(),
+                                        serviceAuthentication);
+                            }
+                        }
+                    }
+                    ServerAdminDataHolder.getInstance().setServiceAuthenticationMap(serviceAuthenticationMap);
+                }
+            } catch (IOException e) {
+                log.error("Error in reading service authentication configuration from " +
+                        CarbonBaseUtils.getServiceAccessControlFile(), e);
+                throw e;
+            } catch (XMLStreamException e) {
+                log.error("Error in parsing service authentication configuration from " +
+                        CarbonBaseUtils.getServiceAccessControlFile(), e);
+                throw e;
+            }
+        }
+    }
+
+    private static List<String> retrievePermissions(OMElement operationOrServiceElement) {
+
+        List<String> permissions = new ArrayList<>();
+        OMElement permissionsElement = operationOrServiceElement.getFirstChildWithName(new QName("Permissions"));
+        if (permissionsElement != null) {
+            Iterator<OMElement> permissionElements = permissionsElement.getChildrenWithLocalName("Permission");
+            if (permissionElements != null) {
+                while (permissionElements.hasNext()) {
+                    OMElement permissionElement = permissionElements.next();
+                    String permission = permissionElement.getText();
+                    if (permission != null && !permission.isEmpty()) {
+                        permissions.add(permission);
+                    }
+                }
+            }
+        }
+        return permissions;
     }
 }
