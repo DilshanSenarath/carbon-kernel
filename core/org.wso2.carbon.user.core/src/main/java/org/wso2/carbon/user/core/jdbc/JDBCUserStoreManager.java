@@ -4682,6 +4682,20 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
                     sqlBuilder.where("LOWER(U.UM_USER_NAME) <> LOWER(?)",
                             expressionCondition.getAttributeValue());
                 }
+            } else if (ExpressionOperation.GE.toString().equals(expressionCondition.getOperation()) &&
+                    ExpressionAttribute.USERNAME.toString().equals(expressionCondition.getAttributeName())) {
+                if (isCaseSensitiveUsername()) {
+                    sqlBuilder.where("U.UM_USER_NAME >= ?", expressionCondition.getAttributeValue());
+                } else {
+                    sqlBuilder.where("LOWER(U.UM_USER_NAME) >= LOWER(?)", expressionCondition.getAttributeValue());
+                }
+            } else if (ExpressionOperation.LE.toString().equals(expressionCondition.getOperation()) &&
+                    ExpressionAttribute.USERNAME.toString().equals(expressionCondition.getAttributeName())) {
+                if (isCaseSensitiveUsername()) {
+                    sqlBuilder.where("U.UM_USER_NAME <= ?", expressionCondition.getAttributeValue());
+                } else {
+                    sqlBuilder.where("LOWER(U.UM_USER_NAME) <= LOWER(?)", expressionCondition.getAttributeValue());
+                }
             } else {
                 // Claim filtering
                 if (!(MYSQL.equals(dbType) || MARIADB.equals(dbType)) || totalMultiGroupFilters > 1 && totalMulitClaimFitlers > 1) {
@@ -4754,6 +4768,10 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
             sqlBuilder.where("R.UM_ROLE_NAME LIKE ?", value + "%");
         } else if (ExpressionOperation.NE.toString().equals(operation)) {
             sqlBuilder.where("(R.UM_ROLE_NAME IS NULL OR R.UM_ROLE_NAME <> ?)", value);
+        } else if (ExpressionOperation.GE.toString().equals(operation)) {
+            sqlBuilder.where("R.UM_ROLE_NAME >= ?", value);
+        } else if (ExpressionOperation.LE.toString().equals(operation)) {
+            sqlBuilder.where("R.UM_ROLE_NAME <= ?", value);
         }
     }
 
@@ -4815,6 +4833,18 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
                 sqlBuilder.where("UA.UM_ATTR_VALUE LIKE ?", attributeValue + "%");
             } else {
                 sqlBuilder.where("LOWER(UA.UM_ATTR_VALUE) LIKE LOWER(?)", attributeValue + "%");
+            }
+        } else if (ExpressionOperation.GE.toString().equals(operation)) {
+            if (isCaseSensitiveUsername()) {
+                sqlBuilder.where("UA.UM_ATTR_VALUE >= ?", attributeValue);
+            } else {
+                sqlBuilder.where("LOWER(UA.UM_ATTR_VALUE) >= LOWER(?)", attributeValue);
+            }
+        } else if (ExpressionOperation.LE.toString().equals(operation)) {
+            if (isCaseSensitiveUsername()) {
+                sqlBuilder.where("UA.UM_ATTR_VALUE <= ?", attributeValue);
+            } else {
+                sqlBuilder.where("LOWER(UA.UM_ATTR_VALUE) <= LOWER(?)", attributeValue);
             }
         }
     }

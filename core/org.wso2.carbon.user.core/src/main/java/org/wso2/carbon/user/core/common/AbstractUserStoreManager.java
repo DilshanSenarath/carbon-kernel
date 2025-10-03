@@ -19990,6 +19990,11 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
         List<String> mergeUserList;
         PaginatedUserResponse paginatedUserResponse = new PaginatedUserResponse();
 
+        if (CollectionUtils.isEmpty(identityClaimFilteredUsers) ||
+                CollectionUtils.isEmpty(nonIdentityClaimFilteredUsers)) {
+            return paginatedUserResponse;
+        }
+
         // Joining two lists based on the minimum size list will give the higher performance.
         if (identityClaimFilteredUsers.size() < nonIdentityClaimFilteredUsers.size()) {
             Set<String> userHashSet = new HashSet<>(nonIdentityClaimFilteredUsers);
