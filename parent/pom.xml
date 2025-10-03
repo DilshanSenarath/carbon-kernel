@@ -654,7 +654,7 @@
         <version.jackson>2.16.1</version.jackson>
         <version.jackson.databind>2.16.1</version.jackson.databind>
         <version.jackson.dataformat>2.16.1</version.jackson.dataformat>
-        <version.jackson.datatype>2.17.3</version.jackson.datatype>
+        <version.jackson.datatype>2.16.1</version.jackson.datatype>
         <version.jsoup>1.15.3</version.jsoup>
         <!--Please make sure to update the Guava and Guava FailureAccess versions in the carbon-registry repository as
         well.-->
