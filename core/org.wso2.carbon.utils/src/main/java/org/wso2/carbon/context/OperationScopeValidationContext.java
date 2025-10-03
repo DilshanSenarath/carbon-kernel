@@ -18,6 +18,8 @@
 
 package org.wso2.carbon.context;
 
+import org.wso2.carbon.context.model.OperationScope;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,7 +35,7 @@ public class OperationScopeValidationContext {
     private String apiIdentifier;
     private boolean validationRequired;
     private List<String> validatedScopes;
-    private Map<String, String> operationScopeMap = new ConcurrentHashMap<>();
+    private Map<String, OperationScope> operationScopeMap = new ConcurrentHashMap<>();
 
     public String getApiIdentifier() {
 
@@ -65,12 +67,12 @@ public class OperationScopeValidationContext {
         this.validatedScopes = validatedScopes;
     }
 
-    public Map<String, String> getOperationScopeMap() {
+    public Map<String, OperationScope> getOperationScopeMap() {
 
         return operationScopeMap;
     }
 
-    public void setOperationScopeMap(Map<String, String> operationScopeMap) {
+    public void setOperationScopeMap(Map<String, OperationScope> operationScopeMap) {
 
         this.operationScopeMap = operationScopeMap;
     }

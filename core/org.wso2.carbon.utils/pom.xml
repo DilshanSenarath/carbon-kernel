@@ -278,7 +278,8 @@
                             org.wso2.carbon.keystore.persistence.model,
                             org.wso2.carbon.utils.*,
                             org.wso2.carbon.context,
-                            !org.wso2.carbon.context.internal
+                            !org.wso2.carbon.context.internal,
+                            org.wso2.carbon.context.model
                         </Export-Package>
                         <Bundle-Activator>org.wso2.carbon.context.internal.CarbonContextActivator</Bundle-Activator>
                         <Private-Package>
