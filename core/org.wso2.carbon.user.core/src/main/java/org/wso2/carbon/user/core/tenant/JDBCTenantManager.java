@@ -824,26 +824,7 @@ public class JDBCTenantManager implements TenantManager {
                 tenant.setRealmConfig(realmConfig);
                 setSecondaryUserStoreConfig(realmConfig, id);
                 tenant.setAdminName(realmConfig.getAdminUserName());
-                if (StringUtils.isNotBlank(tenant.getAssociatedOrganizationUUID())) {
-                    String adminId = realmConfig.getAdminUserId();
-                    if (StringUtils.isNotBlank(adminId)) {
-                        tenant.setAdminUserId(adminId);
-                    } else {
-                        // If realms were not migrated after https://github.com/wso2/product-is/issues/14001.
-                        try {
-                            /*
-                            Try to resolve user id from username. This get successful if the user store manager
-                            can resolve the user id even when the user does not belong to the tenant user store
-                             */
-                            tenant.setAdminUserId(getUserId(realmConfig.getAdminUserName(), id));
-                        } catch (UserStoreException ex) {
-                            // Failure to resolve user id from username means the user id is stored as the username.
-                            tenant.setAdminUserId(realmConfig.getAdminUserName());
-                        }
-                    }
-                } else {
-                    tenant.setAdminUserId(getUserId(realmConfig.getAdminUserName(), id));
-                }
+                setTenantAdminUserId(tenant, realmConfig);
                 if (log.isDebugEnabled()) {
                     log.debug("Obtained tenant from database for the given UUID: " + uniqueId
                             + ", hence adding tenant to cache where tenantDomain: {" + domain + "}");
@@ -864,6 +845,28 @@ public class JDBCTenantManager implements TenantManager {
             throw new UserStoreException(msg, e);
         } finally {
             DatabaseUtil.closeAllConnections(dbConnection, result, prepStmt);
+        }
+        return tenant;
+    }
+
+    public Tenant getTenantByDomain(String tenantDomain) throws UserStoreException {
+
+        if (StringUtils.isBlank(tenantDomain)) {
+            throw new UserStoreException("Tenant domain cannot be null or empty.");
+        }
+
+        Tenant tenant = getTenant(getTenantId(tenantDomain));
+        if (tenant == null) {
+            return null;
+        }
+
+        // Set the tenant admin user id if it is not already set.
+        if (StringUtils.isBlank(tenant.getAdminUserId())) {
+            if (log.isDebugEnabled()) {
+                log.debug("Tenant owner user ID is not set for tenant domain: " + tenantDomain +
+                        ". Attempting to resolve the tenant owner user ID using user store manager.");
+            }
+            setTenantAdminUserId(tenant, tenant.getRealmConfig());
         }
         return tenant;
     }
@@ -1634,5 +1637,38 @@ public class JDBCTenantManager implements TenantManager {
             }
         }
         return false;
+    }
+
+    /**
+     * Sets the tenant admin user id in the tenant object.
+     *
+     * @param tenant      Tenant object to set the admin user id.
+     * @param realmConfig RealmConfiguration object of the tenant.
+     * @throws UserStoreException if an error occurs while retrieving the user id.
+     */
+    private void setTenantAdminUserId(Tenant tenant, RealmConfiguration realmConfig) throws UserStoreException {
+
+        if (tenant == null || realmConfig == null) return;
+        int tenantId = tenant.getId();
+        if (StringUtils.isNotBlank(tenant.getAssociatedOrganizationUUID())) {
+            String adminId = realmConfig.getAdminUserId();
+            if (StringUtils.isNotBlank(adminId)) {
+                tenant.setAdminUserId(adminId);
+            } else {
+                /*
+                 * If realms were not migrated after https://github.com/wso2/product-is/issues/14001,
+                 * try to resolve the user ID from the username. This will succeed if the user store
+                 * manager can resolve the user ID even when the user does not belong to the tenant user store.
+                 */
+                try {
+                    tenant.setAdminUserId(getUserId(realmConfig.getAdminUserName(), tenantId));
+                } catch (UserStoreException ex) {
+                    // Failure to resolve user id from username means the user id is stored as the username.
+                    tenant.setAdminUserId(realmConfig.getAdminUserName());
+                }
+            }
+        } else {
+            tenant.setAdminUserId(getUserId(realmConfig.getAdminUserName(), tenantId));
+        }
     }
 }

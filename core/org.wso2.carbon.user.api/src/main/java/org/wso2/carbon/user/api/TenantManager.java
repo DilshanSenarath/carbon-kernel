@@ -127,4 +127,17 @@ public interface TenantManager {
      * @throws UserStoreException
      */
     String getSuperTenantDomain() throws UserStoreException;
+
+    /**
+     * Gets a Tenant object by tenant domain.
+     *
+     * @param tenantDomain tenant domain.
+     * @return Tenant.
+     * @throws UserStoreException if there is an error in tenant retrieval.
+     */
+    default Tenant getTenantByDomain(String tenantDomain) throws UserStoreException {
+
+        int tenantID = getTenantId(tenantDomain);
+        return getTenant(tenantID);
+    }
 }
