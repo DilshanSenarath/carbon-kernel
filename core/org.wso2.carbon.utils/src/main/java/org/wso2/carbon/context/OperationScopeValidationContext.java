@@ -18,11 +18,9 @@
 
 package org.wso2.carbon.context;
 
-import org.wso2.carbon.context.model.OperationScope;
+import org.wso2.carbon.context.model.OperationScopeSet;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This class holds the context for validating operation scopes.
@@ -35,7 +33,7 @@ public class OperationScopeValidationContext {
     private String apiIdentifier;
     private boolean validationRequired;
     private List<String> validatedScopes;
-    private Map<String, OperationScope> operationScopeMap = new ConcurrentHashMap<>();
+    private OperationScopeSet operationScopeSet;
 
     public String getApiIdentifier() {
 
@@ -67,13 +65,13 @@ public class OperationScopeValidationContext {
         this.validatedScopes = validatedScopes;
     }
 
-    public Map<String, OperationScope> getOperationScopeMap() {
+    public OperationScopeSet getOperationScopeSet() {
 
-        return operationScopeMap;
+        return operationScopeSet;
     }
 
-    public void setOperationScopeMap(Map<String, OperationScope> operationScopeMap) {
+    public void setOperationScopeSet(OperationScopeSet operationScopeSet) {
 
-        this.operationScopeMap = operationScopeMap;
+        this.operationScopeSet = operationScopeSet;
     }
 }
