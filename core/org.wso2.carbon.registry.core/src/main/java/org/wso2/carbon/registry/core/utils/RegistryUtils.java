@@ -1166,48 +1166,63 @@ public final class RegistryUtils {
 		}
 	}
 
+	/**
+	 * Gets or creates a lock object for the specified tenant initialization.
+	 * Uses String.intern() for memory-efficient synchronization.
+	 *
+	 * @param tenantId  The ID of the tenant.
+	 * @return the lock object for the specified tenant initialization.
+	 */
+	private static Object getTenantInitializationLock(int tenantId) {
+
+		return ("initializeTenant:" + tenantId).intern();
+	}
+
 	// Do tenant-specific initialization.
-	public static void initializeTenant(RegistryService registryService, int tenantId)
-	                                                                                  throws RegistryException {
-		try {
-			UserRegistry systemRegistry = registryService.getConfigSystemRegistry();
-			if (systemRegistry.getRegistryContext() != null) {
-				HandlerManager handlerManager =
-				                                systemRegistry.getRegistryContext()
-				                                              .getHandlerManager();
-				if (handlerManager instanceof HandlerLifecycleManager) {
-					((HandlerLifecycleManager) handlerManager).init(tenantId);
-				}
-			}
-			systemRegistry =
-			                 registryService.getRegistry(CarbonConstants.REGISTRY_SYSTEM_USERNAME,
-			                                             tenantId);
-			addMountCollection(systemRegistry);
-			registerMountPoints(systemRegistry, tenantId);
-			new RegistryCoreServiceComponent().setupMounts(registryService, tenantId);
-			setupMediaTypes(registryService, tenantId);
-			// We need to set the tenant ID for current session. Otherwise the
-			// underlying operations fails
+	public static void initializeTenant(RegistryService registryService, int tenantId) throws RegistryException {
+
+		// Synchronize on the specific tenant to prevent race conditions during tenant initialization.
+		synchronized (getTenantInitializationLock(tenantId)) {
 			try {
-				CurrentSession.setTenantId(tenantId);
-				RegistryContext registryContext = systemRegistry.getRegistryContext();
-				// Adding collection to store user profile information.
-				addUserProfileCollection(systemRegistry,
-				                         getAbsolutePath(registryContext,
-				                                         registryContext.getProfilesPath()));
-				// Adding collection to store services.
-				addServiceStoreCollection(systemRegistry,
-				                          getAbsolutePath(registryContext,
-				                                          registryContext.getServicePath()));
-				// Adding service configuration resources.
-				addServiceConfigResources(systemRegistry);
-			} finally {
-				CurrentSession.removeTenantId();
+				UserRegistry systemRegistry = registryService.getConfigSystemRegistry();
+				if (systemRegistry.getRegistryContext() != null) {
+					HandlerManager handlerManager =
+					                                systemRegistry.getRegistryContext()
+					                                              .getHandlerManager();
+					if (handlerManager instanceof HandlerLifecycleManager) {
+						((HandlerLifecycleManager) handlerManager).init(tenantId);
+					}
+				}
+				systemRegistry =
+				                 registryService.getRegistry(CarbonConstants.REGISTRY_SYSTEM_USERNAME,
+				                                             tenantId);
+				addMountCollection(systemRegistry);
+				registerMountPoints(systemRegistry, tenantId);
+				new RegistryCoreServiceComponent().setupMounts(registryService, tenantId);
+				setupMediaTypes(registryService, tenantId);
+				// We need to set the tenant ID for current session. Otherwise the
+				// underlying operations fails
+				try {
+					CurrentSession.setTenantId(tenantId);
+					RegistryContext registryContext = systemRegistry.getRegistryContext();
+					// Adding collection to store user profile information.
+					addUserProfileCollection(systemRegistry,
+					                         getAbsolutePath(registryContext,
+					                                         registryContext.getProfilesPath()));
+					// Adding collection to store services.
+					addServiceStoreCollection(systemRegistry,
+					                          getAbsolutePath(registryContext,
+					                                          registryContext.getServicePath()));
+					// Adding service configuration resources.
+					addServiceConfigResources(systemRegistry);
+				} finally {
+					CurrentSession.removeTenantId();
+				}
+			} catch (RegistryException e) {
+				log.error("Unable to initialize registry for tenant " + tenantId + ".", e);
+				throw new RegistryException("Unable to initialize registry for tenant " + tenantId +
+				                            ".", e);
 			}
-		} catch (RegistryException e) {
-			log.error("Unable to initialize registry for tenant " + tenantId + ".", e);
-			throw new RegistryException("Unable to initialize registry for tenant " + tenantId +
-			                            ".", e);
 		}
 	}
 

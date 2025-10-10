@@ -138,9 +138,8 @@ public class JDBCPathCache extends PathCache {
                 if (log.isDebugEnabled()) {
                     log.debug("Failed to insert due to already exist in database : " + path);
                 }
-                // we have to be expecting an exception with the duplicate value for the path value
-                // which can be further checked from here..
-                pathId = getPathID(conn, path);
+                // Handle constraint violation by rolling back and retrying pathID lookup.
+                pathId = getPathIDAfterRollback(conn, path);
                 if (pathId > 0) {
                     success = true;
                     return pathId;
@@ -307,9 +306,8 @@ public class JDBCPathCache extends PathCache {
                 if (log.isDebugEnabled()) {
                     log.debug("Failed to insert due to already exist in database : " + path);
                 }
-                // we have to be expecting an exception with the duplicate value for the path value
-                // which can be further checked from here..
-                pathId = getPathID(conn, path);
+                // Handle constraint violation by rolling back and retrying pathID lookup.
+                pathId = getPathIDAfterRollback(conn, path);
                 if (pathId > 0) {
                     success = true;
                     return pathId;
@@ -539,5 +537,32 @@ public class JDBCPathCache extends PathCache {
             }
         }
         return -1;
+    }
+
+    /**
+     * Retrieves the existing path ID after rolling back an aborted transaction
+     * caused by a constraint violation during concurrent path creation.
+     *
+     * @param conn the database connection in aborted transaction state
+     * @param path the path that caused the constraint violation
+     * @return the existing path ID if found, or -1 if not found
+     */
+    private int getPathIDAfterRollback(AbstractConnection conn, String path) throws SQLException {
+
+        try {
+            conn.rollback();
+            if (log.isDebugEnabled()) {
+                log.debug("Rolled back aborted transaction for path: " + path +
+                        " for tenant: " + CurrentSession.getTenantId());
+            }
+        } catch (SQLException rollbackException) {
+            String msg = "Failed to rollback aborted transaction for path: " + path +
+                    ". " + rollbackException.getMessage();
+            log.error(msg, rollbackException);
+
+            // Re-throw to maintain error propagation.
+            throw rollbackException;
+        }
+        return getPathID(conn, path);
     }
 }
