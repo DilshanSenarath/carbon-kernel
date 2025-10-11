@@ -136,7 +136,7 @@ public class UserStoreMgtDSComponent {
 
             UserStoreManagerRegistry.init(ctxt.getBundleContext());
 
-            log.info("Carbon UserStoreMgtDSComponent activated successfully.");
+            log.debug("Carbon UserStoreMgtDSComponent activated successfully.");
         } catch (Exception e) {
             log.error("Failed to activate Carbon UserStoreMgtDSComponent ", e);
         }
