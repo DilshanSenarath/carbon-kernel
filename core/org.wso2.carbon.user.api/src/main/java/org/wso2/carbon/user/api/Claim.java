@@ -94,6 +94,8 @@ public class Claim implements Serializable {
      */
     private boolean multiValued;
 
+    private boolean userStorePersistenceEnabled;
+
     public String getClaimUri() {
         return claimUri;
     }
@@ -190,5 +192,23 @@ public class Claim implements Serializable {
     public void setMultiValued(boolean multiValued) {
 
         this.multiValued = multiValued;
+    }
+
+    /**
+     * Indicates whether the user store persistence is enabled for this claim.
+     * @return true if enabled, false otherwise.
+     */
+    public boolean isUserStorePersistenceEnabled() {
+
+        return userStorePersistenceEnabled;
+    }
+
+    /**
+     * Sets the user store persistence enabled status for this claim.
+     * @param userStorePersistenceEnabled true to enable, false to disable.
+     */
+    public void setUserStorePersistenceEnabled(boolean userStorePersistenceEnabled) {
+
+        this.userStorePersistenceEnabled = userStorePersistenceEnabled;
     }
 }
