@@ -17392,15 +17392,13 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
             return false;
         }
 
-        boolean isIdentityClaim = mappedClaim.getClaim().getClaimUri().contains(IDENTITY_CLAIM_URI);
-
         Boolean managedInUserStoreValue = mappedClaim.getClaim().isManagedInUserStore();
         if (managedInUserStoreValue == null) {
             if (log.isDebugEnabled()) {
                 log.debug("ManagedInUserStore property is not set for the claim: " +
                         mappedClaim.getClaim().getClaimUri() + ". Hence defaulting to claim type storage.");
             }
-            return isIdentityClaim;
+            return mappedClaim.getClaim().getClaimUri().contains(IDENTITY_CLAIM_URI);
         }
         if (!managedInUserStoreValue) {
             if (log.isDebugEnabled()) {
