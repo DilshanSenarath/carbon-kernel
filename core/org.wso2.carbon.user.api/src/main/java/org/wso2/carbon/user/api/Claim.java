@@ -19,6 +19,7 @@
 package org.wso2.carbon.user.api;
 
 import java.io.Serializable;
+import java.util.Set;
 
 /**
  * Represents a claim that is associated with an entity usually a user. Claims
@@ -93,6 +94,16 @@ public class Claim implements Serializable {
      * This is to indicate whether attribute to be treated as multivalued or not.
      */
     private boolean multiValued;
+
+    /**
+     * Indicates whether the claim is managed in the user store.
+     */
+    private Boolean managedInUserStore;
+
+    /**
+     * Set of user stores that exclude this claim.
+     */
+    private Set<String> excludedUserStores;
 
     public String getClaimUri() {
         return claimUri;
@@ -190,5 +201,41 @@ public class Claim implements Serializable {
     public void setMultiValued(boolean multiValued) {
 
         this.multiValued = multiValued;
+    }
+
+    /**
+     * Indicates whether the claim is managed in the user store.
+     * @return true if enabled, false otherwise.
+     */
+    public Boolean isManagedInUserStore() {
+
+        return managedInUserStore;
+    }
+
+    /**
+     * Sets the claim to be managed in the user store.
+     * @param managedInUserStore true to enable, false to disable.
+     */
+    public void setManagedInUserStore(Boolean managedInUserStore) {
+
+        this.managedInUserStore = managedInUserStore;
+    }
+
+    /**
+     * Get the set of user stores that exclude this claim.
+     * @return Set of excluded user stores.
+     */
+    public Set<String> getExcludedUserStores() {
+
+        return excludedUserStores;
+    }
+
+    /**
+     * Set the user stores that exclude this claim.
+     * @param excludedUserStores Set of excluded user stores.
+     */
+    public void setExcludedUserStores(Set<String> excludedUserStores) {
+
+        this.excludedUserStores = excludedUserStores;
     }
 }
