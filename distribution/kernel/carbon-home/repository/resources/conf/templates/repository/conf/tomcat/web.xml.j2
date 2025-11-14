@@ -512,6 +512,17 @@
     </filter-mapping>
     {% endif %}
 
+    <filter>
+        <filter-name>URIMethodBlockFilter</filter-name>
+        <filter-class>org.wso2.carbon.ui.filters.URIMethodBlockFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>URIMethodBlockFilter</filter-name>
+        <url-pattern>/services/*</url-pattern>
+        <url-pattern>/t/*</url-pattern>
+    </filter-mapping>
+
     <!-- ==================== Built In Filter Mappings ====================== -->
 
     <!-- The mapping for the SSI Filter -->
