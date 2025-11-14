@@ -68,7 +68,7 @@ public class SecurityVerificationTestCase extends CarbonIntegrationBaseTest {
                         FrameworkConstants.SERVER_DEFAULT_HTTP_PORT
                         + "/services/SecurityVerifierService");
 
-        String address = epr.getAddress();
+        String address = epr.getAddress() + "?wsdl";
         assert isWebServiceDeployed("SecurityVerifierService", address) : address + "does not exist";
 
         opts.setTo(epr);

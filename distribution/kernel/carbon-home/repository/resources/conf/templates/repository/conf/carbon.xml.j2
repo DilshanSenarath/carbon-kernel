@@ -664,6 +664,18 @@
         {% if sts.digest_algorithm is defined %}
         <STSDigestAlgorithm>{{sts.digest_algorithm}}</STSDigestAlgorithm>
         {% endif %}
+
+        <AdminServiceGetRequestFilter>
+            <AllowAllAdminServices>{{admin_service_get_request_filter.allow_all_services}}</AllowAllAdminServices>
+            <AllowedGetURIs>
+                <URI>/services/mex-ut/get</URI>
+                <URI>/services/mex-ut2/get</URI>
+                <URI>/services/RedirectorServletService/validateTenant</URI>
+                {% for uri in admin_service_get_request_filter.allowed_get_uris %}
+                <URI>{{uri}}</URI>
+                {% endfor %}
+            </AllowedGetURIs>
+        </AdminServiceGetRequestFilter>
     </Security>
 
     <!--
