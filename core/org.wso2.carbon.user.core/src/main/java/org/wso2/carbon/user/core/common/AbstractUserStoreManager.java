@@ -3173,6 +3173,22 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
             }
 
             try {
+                if (isIdentityStoreManagedClaim(claimManager.getClaim(claim), extractedDomain)) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("The claim: " + claim + " is an identity store managed claim for the domain: "
+                                + extractedDomain + ". Hence returning empty user list.");
+                    }
+                    return Collections.emptyList();
+                }
+            } catch (org.wso2.carbon.user.api.UserStoreException e) {
+                handleGetUserListFailure(ErrorMessages.ERROR_CODE_ERROR_DURING_PRE_GET_USER_LIST.getCode(),
+                        String.format(ErrorMessages.ERROR_CODE_ERROR_DURING_PRE_GET_USER_LIST.getMessage(),
+                                e.getMessage()), claim, claimValue, profileName);
+                throw new UserStoreException(
+                        "Error occurred while retrieving claim for claim URI: " + claim, e);
+            }
+
+            try {
                 property = claimManager.getAttributeName(extractedDomain, claim);
             } catch (org.wso2.carbon.user.api.UserStoreException e) {
                 handleGetUserListFailure(ErrorMessages.ERROR_CODE_ERROR_DURING_PRE_GET_USER_LIST.getCode(),
@@ -3417,6 +3433,22 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
             }
 
             try {
+                if (isIdentityStoreManagedClaim(claimManager.getClaim(claim), extractedDomain)) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("The claim: " + claim + " is an identity store managed claim for the domain: "
+                                + extractedDomain + ". Hence returning empty user list.");
+                    }
+                    return Collections.emptyList();
+                }
+            } catch (org.wso2.carbon.user.api.UserStoreException e) {
+                handleGetUserListFailureWithID(ErrorMessages.ERROR_CODE_ERROR_DURING_PRE_GET_USER_LIST.getCode(),
+                        String.format(ErrorMessages.ERROR_CODE_ERROR_DURING_PRE_GET_USER_LIST.getMessage(),
+                                e.getMessage()), claim, claimValue, profileName);
+                throw new UserStoreException(
+                        "Error occurred while retrieving claim for claim URI: " + claim, e);
+            }
+
+            try {
                 property = claimManager.getAttributeName(extractedDomain, claim);
             } catch (org.wso2.carbon.user.api.UserStoreException e) {
                 handleGetUserListFailureWithID(ErrorMessages.ERROR_CODE_ERROR_DURING_PRE_GET_USER_LIST.getCode(),
@@ -3545,6 +3577,22 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
             if (log.isDebugEnabled()) {
                 log.debug("Domain found in claim value. Searching only in the " + extractedDomain + " for possible " +
                         "matches");
+            }
+
+            try {
+                if (isIdentityStoreManagedClaim(claimManager.getClaim(claim), extractedDomain)) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("The claim: " + claim + " is an identity store managed claim for the domain: "
+                                + extractedDomain + ". Hence returning empty user list.");
+                    }
+                    return Collections.emptyList();
+                }
+            } catch (org.wso2.carbon.user.api.UserStoreException e) {
+                handleGetUserListFailure(ErrorMessages.ERROR_CODE_ERROR_DURING_PRE_GET_USER_LIST.getCode(),
+                        String.format(ErrorMessages.ERROR_CODE_ERROR_DURING_PRE_GET_USER_LIST.getMessage(),
+                                e.getMessage()), claim, claimValue, limit, offset, profileName);
+                throw new UserStoreException(
+                        "Error occurred while retrieving claim for claim URI: " + claim, e);
             }
 
             try {
@@ -17367,7 +17415,7 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
             }
 
             // Check if the claim is an identity store managed claim and map the attribute name to claim URI.
-            if (isIdentityStoreManagedClaim(mappedClaim, userStoreDomain)) {
+            if (isIdentityStoreManagedClaim(mappedClaim.getClaim(), userStoreDomain)) {
                 expressionCondition.setAttributeName(mappedClaim.getClaim().getClaimUri());
                 if (log.isDebugEnabled()) {
                     log.debug("Obtained the ClaimURI " + mappedClaim.getClaim().getClaimUri() +
@@ -17382,33 +17430,33 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
      * Note: This only checks the `managedInUserStore` property of the claim and `excludedUserStores` property only.
      * This doesn't check if the identity store is a user-store based or if the given user store is configured
      * to store identity claims.
-     * @param mappedClaim
-     * @return
+     * @param localClaim Claim to be checked.
+     * @param userStoreDomain User store domain.
+     * @return True if the claim is an identity store managed claim, false otherwise.
      */
-    private boolean isIdentityStoreManagedClaim(org.wso2.carbon.user.api.ClaimMapping mappedClaim,
-                                                String userStoreDomain) {
+    private boolean isIdentityStoreManagedClaim(org.wso2.carbon.user.api.Claim localClaim, String userStoreDomain) {
 
-        if (mappedClaim == null) {
+        if (localClaim == null) {
             return false;
         }
 
-        Boolean managedInUserStoreValue = mappedClaim.getClaim().isManagedInUserStore();
+        Boolean managedInUserStoreValue = localClaim.isManagedInUserStore();
         if (managedInUserStoreValue == null) {
             if (log.isDebugEnabled()) {
                 log.debug("ManagedInUserStore property is not set for the claim: " +
-                        mappedClaim.getClaim().getClaimUri() + ". Hence defaulting to claim type storage.");
+                        localClaim.getClaimUri() + ". Hence defaulting to claim type storage.");
             }
-            return mappedClaim.getClaim().getClaimUri().contains(IDENTITY_CLAIM_URI);
+            return localClaim.getClaimUri().contains(IDENTITY_CLAIM_URI);
         }
         if (!managedInUserStoreValue) {
             if (log.isDebugEnabled()) {
-                log.debug("Claim: " + mappedClaim.getClaim().getClaimUri() +
+                log.debug("Claim: " + localClaim.getClaimUri() +
                         " is an identity store managed claim as per the ManagedInUserStore property.");
             }
             return true;
         }
 
-        Set<String> excludedUserStores = mappedClaim.getClaim().getExcludedUserStores();
+        Set<String> excludedUserStores = localClaim.getExcludedUserStores();
         if (CollectionUtils.isEmpty(excludedUserStores)) {
             return false;
         }
@@ -17472,6 +17520,22 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
             if (log.isDebugEnabled()) {
                 log.debug("Domain found in claim value. Searching only in the " + extractedDomain + " for possible "
                         + "matches");
+            }
+
+            try {
+                if (isIdentityStoreManagedClaim(claimManager.getClaim(claim), extractedDomain)) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("The claim: " + claim + " is an identity store managed claim for the domain: "
+                                + extractedDomain + ". Hence returning empty user list.");
+                    }
+                    return Collections.emptyList();
+                }
+            } catch (org.wso2.carbon.user.api.UserStoreException e) {
+                handleGetUserListFailure(ErrorMessages.ERROR_CODE_ERROR_DURING_PRE_GET_USER_LIST.getCode(),
+                        String.format(ErrorMessages.ERROR_CODE_ERROR_DURING_PRE_GET_USER_LIST.getMessage(),
+                                e.getMessage()), claim, claimValue, limit, offset, profileName);
+                throw new UserStoreException(
+                        "Error occurred while retrieving claim for claim URI: " + claim, e);
             }
 
             try {
