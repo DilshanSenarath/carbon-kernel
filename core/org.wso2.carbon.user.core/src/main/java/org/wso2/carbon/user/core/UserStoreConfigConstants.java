@@ -214,4 +214,10 @@ public class UserStoreConfigConstants {
             "skip multi-valued attribute separation";
     public static final String singleValuedAttributesDisplayName = "Single Valued Attributes";
 
+    // Property to force all claims to be stored in user store regardless of other configurations.
+    public static final String STORE_IDENTITY_CLAIMS = "StoreIdentityClaims";
+    public static final String STORE_IDENTITY_CLAIMS_DISPLAY_NAME = "Store Identity Claims";
+    public static final String STORE_IDENTITY_CLAIMS_DESCRIPTION = "When enabled, all identity and user claims will " +
+            "be stored in the user store manager regardless of other claim configurations";
+
 }
