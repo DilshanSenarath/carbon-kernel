@@ -3276,11 +3276,8 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
                     continue;
                 }
             } catch (org.wso2.carbon.user.api.UserStoreException e) {
-                handleGetUserListFailure(ErrorMessages.ERROR_CODE_ERROR_DURING_PRE_GET_USER_LIST.getCode(),
-                        String.format(ErrorMessages.ERROR_CODE_ERROR_DURING_PRE_GET_USER_LIST.getMessage(),
-                                e.getMessage()), claim, claimValue, profileName);
-                throw new UserStoreException(
-                        "Error occurred while retrieving claim for claim URI: " + claim, e);
+                log.error(String.format("Error occurred while retrieving claim for claim URI: %s for domain: %s.",
+                        claim, domainName), e);
             }
 
             String claimValueWithDomain;
@@ -3555,11 +3552,8 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
                     continue;
                 }
             } catch (org.wso2.carbon.user.api.UserStoreException e) {
-                handleGetUserListFailureWithID(ErrorMessages.ERROR_CODE_ERROR_DURING_PRE_GET_USER_LIST.getCode(),
-                        String.format(ErrorMessages.ERROR_CODE_ERROR_DURING_PRE_GET_USER_LIST.getMessage(),
-                                e.getMessage()), claim, claimValue, profileName);
-                throw new UserStoreException(
-                        "Error occurred while retrieving claim for claim URI: " + claim, e);
+                log.error(String.format("Error occurred while retrieving claim for claim URI: %s for domain: %s.",
+                        claim, domainName), e);
             }
 
             String claimValueWithDomain;
