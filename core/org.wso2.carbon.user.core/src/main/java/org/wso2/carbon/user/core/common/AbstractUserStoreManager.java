@@ -3267,19 +3267,6 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
             // For all the user stores append the domain name to the claim and pass it recursively (Including PRIMARY).
             String domainName = ((AbstractUserStoreManager) userStoreManager).getMyDomainName();
 
-            try {
-                if (isIdentityStoreManagedClaim(claimManager.getClaim(claim), domainName, userStoreManager)) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("The claim: " + claim + " is an identity store managed claim for the domain: "
-                                + domainName + ". Hence skipping the user store.");
-                    }
-                    continue;
-                }
-            } catch (org.wso2.carbon.user.api.UserStoreException e) {
-                log.error(String.format("Error occurred while retrieving claim for claim URI: %s for domain: %s.",
-                        claim, domainName), e);
-            }
-
             String claimValueWithDomain;
             if (StringUtils.equalsIgnoreCase(domainName, UserCoreConstants.PRIMARY_DEFAULT_DOMAIN_NAME)) {
                 claimValueWithDomain = domainName + CarbonConstants.DOMAIN_SEPARATOR + claimValue;
@@ -3542,19 +3529,6 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
 
             // For all the user stores append the domain name to the claim and pass it recursively (Including PRIMARY).
             String domainName = ((AbstractUserStoreManager) userStoreManager).getMyDomainName();
-
-            try {
-                if (isIdentityStoreManagedClaim(claimManager.getClaim(claim), domainName, userStoreManager)) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("The claim: " + claim + " is an identity store managed claim for the domain: "
-                                + domainName + ". Hence skipping the user store.");
-                    }
-                    continue;
-                }
-            } catch (org.wso2.carbon.user.api.UserStoreException e) {
-                log.error(String.format("Error occurred while retrieving claim for claim URI: %s for domain: %s.",
-                        claim, domainName), e);
-            }
 
             String claimValueWithDomain;
             if (StringUtils.equalsIgnoreCase(domainName, UserCoreConstants.PRIMARY_DEFAULT_DOMAIN_NAME)) {
