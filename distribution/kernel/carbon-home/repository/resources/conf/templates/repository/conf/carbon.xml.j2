@@ -939,6 +939,14 @@
             <Socket>
                 <TimeoutInMilliSeconds>{{http_client.socket.timeout_in_milli_seconds}}</TimeoutInMilliSeconds>
             </Socket>
+            {% if http_client.pool.enabled is defined %}
+            <ConnectionPool>
+                <Enabled>{{http_client.pool.enabled}}</Enabled>
+                <MaxTotalConnections>{{http_client.pool.max_total_connections}}</MaxTotalConnections>
+                <DefaultMaxConnectionsPerRoute>{{http_client.pool.default_max_connections_per_route}}</DefaultMaxConnectionsPerRoute>
+                <AddKeepAliveStrategy>{{http_client.pool.add_keep_alive_strategy}}</AddKeepAliveStrategy>
+            </ConnectionPool>
+            {% endif %}
         </HttpClient>
 
     <!-- Configure to instrument operations using OpenTelemetry manual instrumentation -->
