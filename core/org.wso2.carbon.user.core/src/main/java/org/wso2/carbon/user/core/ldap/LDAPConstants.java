@@ -99,6 +99,11 @@ public class LDAPConstants {
     public static final String SHARED_TENANT_OBJECT_CLASS = "SharedTenantObjectClass";
 
     public static final String CONNECTION_POOLING_ENABLED = "ConnectionPoolingEnabled";
+
+    public static final int LDAP_DEFAULT_PORT = 389;
+    public static final int LDAPS_DEFAULT_PORT = 636;
+    public static final String LDAPS_SCHEME = "ldaps";
+    public static final String URL_SCHEME_SEPARATOR = "://";
     public static final String USER_CACHE_EXPIRY_MILLISECONDS = "UserCacheExpiryMilliseconds";
     public static final String USER_DN_CACHE_ENABLED = "UserDNCacheEnabled";
 

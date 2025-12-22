@@ -144,21 +144,7 @@ public class LDAPConnectionContext {
         String connectionURL = null;
         //if DNS enabled in AD case, this can be null
         if (rawConnectionURL != null) {
-            String portInfo = rawConnectionURL.split(":")[2];
-
-            String port = null;
-
-            // if the port contains a template string that refers to carbon.xml
-            if ((portInfo.contains("${")) && (portInfo.contains("}"))) {
-                port = Integer.toString(CarbonUtils.getPortFromServerConfig(portInfo));
-            }
-
-            if (port != null) {
-                connectionURL = rawConnectionURL.replace(portInfo, port);
-            } else {
-                // if embedded-ldap is not enabled,
-                connectionURL = realmConfig.getUserStoreProperty(LDAPConstants.CONNECTION_URL);
-            }
+            connectionURL = resolvePort(rawConnectionURL);
         }
 
         String connectionName = realmConfig.getUserStoreProperty(LDAPConstants.CONNECTION_NAME);
@@ -1121,6 +1107,67 @@ public class LDAPConnectionContext {
             return retryWaitingTime;
         } catch (NumberFormatException e) {
             throw new UserStoreException("Error occurred while parsing ConnectionRetryDelay property value.");
+        }
+    }
+
+    /**
+     * Resolves the port for the connection URL.
+     * The port number is optional, according to the LDAP URL spec.
+     * Therefore, if the port number isn't present, LDAP URL should default to port 389
+     * and LDAPS URL should default to port 636.
+     * See spec: https://ldapwiki.com/wiki/Wiki.jsp?page=LDAP+URL
+     *
+     * @param url The LDAP URL to resolve.
+     * @return The URL with resolved port.
+     */
+    private static String resolvePort(String url) {
+
+        if (StringUtils.isEmpty(url)) {
+            return url;
+        }
+
+        url = url.trim();
+        int schemeIndex = url.indexOf(LDAPConstants.URL_SCHEME_SEPARATOR);
+        if (schemeIndex == -1) {
+            return url;
+        }
+
+        String scheme = url.substring(0, schemeIndex);
+        String rest = url.substring(schemeIndex + LDAPConstants.URL_SCHEME_SEPARATOR.length());
+
+        String hostAndPort;
+        String path = "";
+        int pathIndex = rest.indexOf("/");
+        if (pathIndex != -1) {
+            hostAndPort = rest.substring(0, pathIndex);
+            path = rest.substring(pathIndex);
+        } else {
+            hostAndPort = rest;
+        }
+
+        // Handle IPv6: [2001:db8::1]:389
+        int lastColonIndex = hostAndPort.lastIndexOf(':');
+        int lastBracketIndex = hostAndPort.lastIndexOf(']');
+
+        if (lastColonIndex != -1 && lastColonIndex > lastBracketIndex) {
+            // Port is present.
+            String portInfo = hostAndPort.substring(lastColonIndex + 1);
+            // If the port contains a template string that refers to carbon.xml.
+            if (portInfo.contains("${") && portInfo.contains("}")) {
+                int resolvedPort = CarbonUtils.getPortFromServerConfig(portInfo);
+                if (resolvedPort != -1) {
+                    return scheme + LDAPConstants.URL_SCHEME_SEPARATOR + hostAndPort.substring(0, lastColonIndex) +
+                            ":" + resolvedPort + path;
+                }
+            }
+            return url;
+        } else {
+            // Port is missing, add default port.
+            int defaultPort = LDAPConstants.LDAP_DEFAULT_PORT;
+            if (LDAPConstants.LDAPS_SCHEME.equalsIgnoreCase(scheme)) {
+                defaultPort = LDAPConstants.LDAPS_DEFAULT_PORT;
+            }
+            return scheme + LDAPConstants.URL_SCHEME_SEPARATOR + hostAndPort + ":" + defaultPort + path;
         }
     }
 }
