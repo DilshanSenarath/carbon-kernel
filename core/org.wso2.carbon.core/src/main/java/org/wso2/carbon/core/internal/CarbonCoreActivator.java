@@ -73,32 +73,32 @@ public class CarbonCoreActivator implements BundleActivator {
                  System.getProperty("user.language") + "-" + System.getProperty("user.country") +
                  ", " + System.getProperty("user.timezone"));
 
-//        String providerName = ServerConfiguration.getInstance().getFirstProperty(ServerConstants.JCE_PROVIDER);
-//        Provider provider;
-//        if (StringUtils.isBlank(providerName) || providerName.equals(ServerConstants.JCE_PROVIDER_BC)) {
-//            provider = (Provider) (Class.forName("org.bouncycastle.jce.provider.BouncyCastleProvider")).
-//                    getDeclaredConstructor().newInstance();
-//
-//            // Add BouncyCastle JSSE provider and preferred named groups for outbound communication.
-//            String jsseProviderName = ServerConfiguration.getInstance().getFirstProperty(ServerConstants.JSSE_PROVIDER);
-//            if (ServerConstants.JSSE_PROVIDER_BC.equals(jsseProviderName)) {
-//                Provider jsseProvider = (Provider)
-//                        (Class.forName("org.bouncycastle.jsse.provider.BouncyCastleJsseProvider")).
-//                        getDeclaredConstructor().newInstance();
-//                Security.insertProviderAt(jsseProvider, 1);
-//            }
-//
-//        } else if (providerName.equals(ServerConstants.JCE_PROVIDER_BCFIPS)) {
-//            provider = (Provider) (Class.forName("org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider")).
-//                    getDeclaredConstructor().newInstance();
-//
-//        } else {
-//            throw new NoSuchProviderException("Configured JCE provider is not supported.");
-//        }
-//        Security.addProvider(provider);
-//        if (log.isDebugEnabled()) {
-//            log.debug(providerName + " security provider is successfully registered in JVM.");
-//        }
+        String providerName = ServerConfiguration.getInstance().getFirstProperty(ServerConstants.JCE_PROVIDER);
+        Provider provider;
+        if (StringUtils.isBlank(providerName) || providerName.equals(ServerConstants.JCE_PROVIDER_BC)) {
+            provider = (Provider) (Class.forName("org.bouncycastle.jce.provider.BouncyCastleProvider")).
+                    getDeclaredConstructor().newInstance();
+
+            // Add BouncyCastle JSSE provider and preferred named groups for outbound communication.
+            String jsseProviderName = ServerConfiguration.getInstance().getFirstProperty(ServerConstants.JSSE_PROVIDER);
+            if (ServerConstants.JSSE_PROVIDER_BC.equals(jsseProviderName)) {
+                Provider jsseProvider = (Provider)
+                        (Class.forName("org.bouncycastle.jsse.provider.BouncyCastleJsseProvider")).
+                        getDeclaredConstructor().newInstance();
+                Security.insertProviderAt(jsseProvider, 1);
+            }
+
+        } else if (providerName.equals(ServerConstants.JCE_PROVIDER_BCFIPS)) {
+            provider = (Provider) (Class.forName("org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider")).
+                    getDeclaredConstructor().newInstance();
+
+        } else {
+            throw new NoSuchProviderException("Configured JCE provider is not supported.");
+        }
+        Security.addProvider(provider);
+        if (log.isDebugEnabled()) {
+            log.debug(providerName + " security provider is successfully registered in JVM.");
+        }
     }
 
     public void stop(BundleContext context) throws Exception {

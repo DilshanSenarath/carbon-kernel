@@ -479,10 +479,8 @@
         <imp.pkg.version.neethi>[2.0.4.wso2v4, 3.0.0)</imp.pkg.version.neethi>
 
         <!-- Apache Axiom -->
-        <orbit.version.axiom>1.2.11-wso2v28</orbit.version.axiom>
+        <orbit.version.axiom>1.2.11-wso2v31-SNAPSHOT</orbit.version.axiom>
         <imp.pkg.version.axiom>[1.2.11, 1.3.0)</imp.pkg.version.axiom>
-        <version.axiom>1.2.11-wso2v28</version.axiom>
-        <axiom.osgi.version>1.2.11-wso2v28</axiom.osgi.version>
         <axiom.osgi.version.range>[1.2.11, 1.3.0)</axiom.osgi.version.range>
         <commons-text.orbit.version>1.10.0.wso2v2</commons-text.orbit.version>
         <commons-lang3.orbit.version>3.18.0.wso2v1</commons-lang3.orbit.version>
@@ -546,7 +544,7 @@
         <hibernate.orbit.version>3.2.5.ga-wso2v1</hibernate.orbit.version>
 
         <!-- bouncycastle -->
-        <bouncycastle.version>1.81.0.wso2v1</bouncycastle.version>
+        <bouncycastle.version>1.83.0.wso2v1</bouncycastle.version>
         <imp.pkg.version.bcp>[1.0.0, 2.0.0)</imp.pkg.version.bcp>
 
         <!--BPS specific-->
@@ -2134,16 +2132,6 @@
                 <groupId>org.wso2.carbon.utils</groupId>
                 <artifactId>org.wso2.carbon.database.utils</artifactId>
                 <version>${org.wso2.carbon.database.utils.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.wso2.orbit.javax.activation</groupId>
-                <artifactId>activation</artifactId>
-                <version>1.1.1.wso2v4</version>
-            </dependency>
-            <dependency>
-                <groupId>javax.xml.soap</groupId>
-                <artifactId>javax.xml.soap-api</artifactId>
-                <version>1.4.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
