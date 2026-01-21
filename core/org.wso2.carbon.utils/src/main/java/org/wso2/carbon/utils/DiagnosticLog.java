@@ -21,7 +21,6 @@ package org.wso2.carbon.utils;
 import org.slf4j.MDC;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -56,9 +55,6 @@ public class DiagnosticLog {
                          Map<String, Object> input, Map<String, Object> configurations) {
 
         this.logId = logId;
-        if (CarbonUtils.isMicrosecondTruncateEnabled()) {
-            recordedAt = recordedAt.truncatedTo(ChronoUnit.MICROS);
-        }
         this.recordedAt = recordedAt;
         this.requestId = requestId;
         this.flowId = flowId;
@@ -312,9 +308,6 @@ public class DiagnosticLog {
             }
             logId = UUID.randomUUID().toString();
             recordedAt = Instant.now();
-            if (CarbonUtils.isMicrosecondTruncateEnabled()) {
-                recordedAt = recordedAt.truncatedTo(ChronoUnit.MICROS);
-            }
             requestId = MDC.get(CORRELATION_ID_MDC);
             flowId = MDC.get(FLOW_ID_MDC);
             if (this.logDetailLevel == null) {
