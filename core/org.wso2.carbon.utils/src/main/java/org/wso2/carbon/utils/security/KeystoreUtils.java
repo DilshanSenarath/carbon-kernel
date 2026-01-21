@@ -135,6 +135,17 @@ public class KeystoreUtils {
     }
 
     /**
+     * Retrieve keystore file location for a given context.
+     * This won't consider the server configuration for super tenant as the context is provided.
+     *
+     * @return File location.
+     */
+    public static String getKeyStoreFileLocation(String ksName, String tenantDomain) {
+
+        return ksName + getKeyStoreFileExtension(ksName, tenantDomain);
+    }
+
+    /**
      * Retrieve keystore file type (ex: JKS, PKCS12).
      * @param tenantDomain  Tenant domain the keystore need to be resolved.
      *
@@ -163,6 +174,32 @@ public class KeystoreUtils {
     }
 
     /**
+     * Retrieve keystore file type (ex: JKS, PKCS12).
+     * @param tenantDomain  Tenant domain the keystore need to be resolved.
+     *
+     * @return File type.
+     */
+    public static String getKeyStoreFileType(String ksName, String tenantDomain) {
+
+        String keystoreType;
+        if (MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
+            keystoreType = CarbonUtils.getServerConfiguration().getFirstProperty("Security.KeyStore.Type");
+            try {
+                StoreFileType.validateFileType(keystoreType);
+            } catch (CarbonException e) {
+                LOG.error("Unsupported file type for key store file", e);
+            }
+        } else {
+            keystoreType = StoreFileType.defaultFileType();
+        }
+        String ksExtension = getExtensionByFileType(keystoreType);
+        if (StoreFileType.PKCS12.name().equals(keystoreType) && isKeyStoreExists(ksName + ksExtension)) {
+            return keystoreType;
+        }
+        return FALLBACK_TENANTED_KEYSTORE_FILE_TYPE;
+    }
+
+    /**
      * Retrieve keystore file extension (ex: .jks, .p12).
      *
      * @return File extension.
@@ -170,6 +207,16 @@ public class KeystoreUtils {
     public static String getKeyStoreFileExtension(String tenantDomain) {
 
         return getExtensionByFileType(getKeyStoreFileType(tenantDomain));
+    }
+
+    /**
+     * Retrieve keystore file extension (ex: .jks, .p12).
+     *
+     * @return File extension.
+     */
+    public static String getKeyStoreFileExtension(String ksName, String tenantDomain) {
+
+        return getExtensionByFileType(getKeyStoreFileType(ksName, tenantDomain));
     }
 
     /**
