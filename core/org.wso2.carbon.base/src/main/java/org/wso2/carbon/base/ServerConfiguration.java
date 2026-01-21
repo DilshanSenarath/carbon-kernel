@@ -84,7 +84,7 @@ public class ServerConfiguration implements ServerConfigurationService {
     /**
      * Constant to be used for properties storing whether to truncate log timestamps to microseconds.
      */
-    public static final String LOG_MGT_TRUNCATE_TO_MICROSECONDS = "LogMgt.TruncateToMicroseconds";
+    public static final String LOG_MGT_TRUNCATE_TO_MICROSECONDS = "LogMgt.AuditLog.TruncateToMicroseconds";
 	/**
 	 * Constant to be used for properties storing the http port of the servlet
 	 * transport.

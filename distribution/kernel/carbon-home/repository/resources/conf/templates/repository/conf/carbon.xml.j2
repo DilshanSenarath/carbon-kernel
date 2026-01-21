@@ -892,9 +892,11 @@
         <EnableEncryption>{{remote_logging.encrypt_secrets}}</EnableEncryption>
     </RemoteLogging>
 
-    {% if log_mgt.truncate_to_microseconds is defined %}
+    {% if log_mgt.audit_log.truncate_to_microseconds is defined %}
     <LogMgt>
-        <TruncateToMicroseconds>{{log_mgt.truncate_to_microseconds}}</TruncateToMicroseconds>
+        <AuditLog>
+            <TruncateToMicroseconds>{{log_mgt.audit_log.truncate_to_microseconds}}</TruncateToMicroseconds>
+        </AuditLog>
     </LogMgt>
     {% endif %}
 

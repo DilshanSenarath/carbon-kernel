@@ -743,7 +743,9 @@
         </ConfigSync>
     </RemoteLogging>
     <LogMgt>
-        <TruncateToMicroseconds>false</TruncateToMicroseconds>
+        <AuditLog>
+            <TruncateToMicroseconds>false</TruncateToMicroseconds>
+        </AuditLog>
     </LogMgt>
 
     <!-- Configure default management ui path for server -->
