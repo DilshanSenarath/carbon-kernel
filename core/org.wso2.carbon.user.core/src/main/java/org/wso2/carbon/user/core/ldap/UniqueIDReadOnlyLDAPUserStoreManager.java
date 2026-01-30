@@ -3294,8 +3294,9 @@ public class UniqueIDReadOnlyLDAPUserStoreManager extends ReadOnlyLDAPUserStoreM
                     pageSize));
         }
         try {
+            List<User> usersList = new ArrayList<>();
+            String userNameAttribute = realmConfig.getUserStoreProperty(LDAPConstants.USER_NAME_ATTRIBUTE);
             for (String searchBase : searchBaseArray) {
-                List<User> usersList = new ArrayList<>();
                 do {
                     List<User> tempUsersList = new ArrayList<>();
                     answer = ldapContext.search(escapeDNForSearch(searchBase), searchFilter, searchControls);
@@ -3353,19 +3354,21 @@ public class UniqueIDReadOnlyLDAPUserStoreManager extends ReadOnlyLDAPUserStoreM
                         }
                     }
                     cookie = parseControls(ldapContext.getResponseControls());
-                    String userNameAttribute = realmConfig.getUserStoreProperty(LDAPConstants.USER_NAME_ATTRIBUTE);
                     ldapContext.setRequestControls(new Control[]{new PagedResultsControl(pageSize, cookie,
                             Control.CRITICAL), new SortControl(userNameAttribute, Control.NONCRITICAL)});
                 } while ((cookie != null) && (cookie.length != 0));
-                if (CollectionUtils.isNotEmpty(usersList)) {
-                    // Here we show the remaining users in the final page if we have any.
-                    pageIndex++;
-                    if (isMemberShipPropertyFound) {
-                        users = membershipGroupFilterPostProcessing(isUsernameFiltering, isClaimFiltering,
-                                expressionConditions, usersList);
-                    } else {
-                        generatePaginatedUserList(pageIndex, offset, pageSize, usersList, users);
-                    }
+                // Reset paging cookie for new search base.
+                ldapContext.setRequestControls(new Control[]{new PagedResultsControl(pageSize, null,
+                        Control.CRITICAL), new SortControl(userNameAttribute, Control.NONCRITICAL)});
+            }
+            if (CollectionUtils.isNotEmpty(usersList)) {
+                // Here we show the remaining users in the final page if we have any.
+                pageIndex++;
+                if (isMemberShipPropertyFound) {
+                    users = membershipGroupFilterPostProcessing(isUsernameFiltering, isClaimFiltering,
+                            expressionConditions, usersList);
+                } else {
+                    generatePaginatedUserList(pageIndex, offset, pageSize, usersList, users);
                 }
             }
         } catch (PartialResultException e) {
