@@ -306,6 +306,7 @@ public class UserCoreConstants {
         public static final String INVALID_CREDENTIAL = "17002";
         public static final String USER_IS_LOCKED = "17003";
         public static final String USER_DELETION_WORKFLOW_CREATED = "17004";
+        public static final String USER_UPDATE_USER_CLAIMS_WORKFLOW_CREATED = "17005";
 
     }
 }
