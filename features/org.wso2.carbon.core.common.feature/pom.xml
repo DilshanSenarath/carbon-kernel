@@ -84,7 +84,6 @@
                                 <bundleDef>wsdl4j.wso2:wsdl4j:${orbit.version.wsdl4j}</bundleDef>
                                 <bundleDef>org.apache.ws.commons.schema.wso2:XmlSchema:${version.XmlSchema}</bundleDef>
                                 <bundleDef>org.wso2.orbit.commons-codec:commons-codec:${version.commons.codec}</bundleDef>
-                                <bundleDef>annogen.wso2:annogen:${version.annogen}</bundleDef>
                                 <bundleDef>
                                     backport-util-concurrent.wso2:backport-util-concurrent:${version.backport.util.concurrent}
                                 </bundleDef>
@@ -98,7 +97,6 @@
                                     org.wso2.orbit.commons-collections:commons-collections:${orbit.version.commons.collection}
                                 </bundleDef>
                                 <bundleDef>org.apache.httpcomponents.wso2:httpcore:${orbit.version.httpcore}</bundleDef>
-                                <bundleDef>org.compass-project.wso2:compass:${version.compass}</bundleDef>
                                 <bundleDef>commons-lang.wso2:commons-lang:${orbit.version.commons.lang}</bundleDef>
                                 <bundleDef>org.wso2.orbit.org.apache.poi:poi:${orbit.version.poi}</bundleDef>
                                 <bundleDef>org.wso2.orbit.org.apache.poi:poi-scratchpad:${orbit.version.poi.scratchpad}

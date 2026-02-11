@@ -255,7 +255,7 @@
                             javax.xml.namespace; version=0.0.0,
                             javax.servlet; version="${imp.pkg.version.javax.servlet}",
                             javax.servlet.http; version="${imp.pkg.version.javax.servlet}",
-                            javax.xml.stream.*; version=1.0.1,
+                            javax.xml.stream.*; version=1.0.1;resolution:=optional,
                             org.wso2.carbon.registry.core.service,
                             org.wso2.carbon.user.core.*; version=0.0.0,
                             org.bouncycastle.jcajce.*; version="${imp.pkg.version.bcp}"; resolution:=optional,

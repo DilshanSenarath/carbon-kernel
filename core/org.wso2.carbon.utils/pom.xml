@@ -296,7 +296,7 @@
                             javax.sql.*,
                             org.apache.axis2.*; version="${imp.pkg.version.axis2}",
                             org.apache.axiom.*; version="${imp.pkg.version.axiom}",
-                            javax.xml.stream.*; version="1.0.1",
+                            javax.xml.stream.*; version="1.0.1";resolution:=optional,
                             org.bouncycastle.*; version="${imp.pkg.version.bcp}",
                             org.wso2.carbon.database.utils.jdbc.*;version="${org.wso2.carbon.database.utils.version.range}",
                             *;resolution:=optional

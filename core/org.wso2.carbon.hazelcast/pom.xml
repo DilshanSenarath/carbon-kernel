@@ -91,7 +91,7 @@
                             org.apache.axis2.*; version="${imp.pkg.version.axis2}",
                             org.apache.axiom.*; version="${imp.pkg.version.axiom}",
                             javax.xml.namespace; version=0.0.0,
-                            javax.xml.stream.*; version=1.0.1,
+                            javax.xml.stream.*; version=1.0.1;resolution:=optional,
                             *;resolution:=optional
                         </Import-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>

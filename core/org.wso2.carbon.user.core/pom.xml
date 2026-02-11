@@ -53,6 +53,10 @@
             <artifactId>org.wso2.carbon.utils</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.eclipse.platform</groupId>
+            <artifactId>org.eclipse.osgi.services</artifactId>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
@@ -220,7 +224,7 @@
                             org.apache.commons.lang.*,
                             org.slf4j,
                             javax.naming.*,
-                            javax.xml.stream.*; version="1.0.1",
+                            javax.xml.stream.*; version="1.0.1";resolution:=optional,
                             javax.xml.namespace; version=0.0.0,
                             *;resolution:=optional
                         </Import-Package>

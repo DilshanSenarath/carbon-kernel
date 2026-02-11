@@ -71,7 +71,6 @@
                 <include name="commons-pool*.jar"/>
                 <include name="commons-dbcp*.jar"/>
                 <include name="commons-io*.jar"/>
-                <include name="compass*.jar"/>
                 <include name="org.wso2.carbon.rm*.jar"/>
                 <include name="rampart-trust*.jar"/>
                 <include name="org.wso2.carbon.security.mgt*.jar"/>
