@@ -522,8 +522,8 @@
         <version.commons.logging>1.2</version.commons.logging>
 
         <!--PAX Logging related dependency versions-->
-        <pax.logging.api.version>2.1.0-wso2v5</pax.logging.api.version>
-        <pax.logging.log4j2.version>2.1.0-wso2v5</pax.logging.log4j2.version>
+        <pax.logging.api.version>2.2.9-wso2v2</pax.logging.api.version>
+        <pax.logging.log4j2.version>2.2.9-wso2v2</pax.logging.log4j2.version>
 
         <!--<version.opensaml2>2.4.1.wso2v1</version.opensaml2>-->
 
@@ -555,8 +555,8 @@
         <version.drools>5.1.1</version.drools>
         <version.jsr94>1.1</version.jsr94>
 
-        <version.log4j.core>2.17.1</version.log4j.core>
-        <version.log4j.jul>2.17.1</version.log4j.jul>
+        <version.log4j.core>2.25.3</version.log4j.core>
+        <version.log4j.jul>2.25.3</version.log4j.jul>
         <version.commons.logging>1.2</version.commons.logging>
         <version.xmlunit>1.1</version.xmlunit>
         <version.jaxen>1.1.1</version.jaxen>
