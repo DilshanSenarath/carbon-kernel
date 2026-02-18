@@ -343,7 +343,6 @@
         <import.osgi.framework.version.range>[1.9,2.0)</import.osgi.framework.version.range>
         <import.osgi.service.component.version.range>[1.2.0,2.0)</import.osgi.service.component.version.range>
         <version.equinox.http.servlet>1.8.100</version.equinox.http.servlet>
-<!--        <version.equinox.http.helper>1.1.0.wso2v1</version.equinox.http.helper>-->
         <version.equinox.jsp.jasper>1.2.0</version.equinox.jsp.jasper>
         <version.equinox.javax.servlet>3.0.0.v201112011016</version.equinox.javax.servlet>
         <version.equinox.javax.el>2.2.0.v201108011116</version.equinox.javax.el>
@@ -669,6 +668,7 @@
         <org.wso2.carbon.database.utils.version.range>[2.1.0,3.0.0)</org.wso2.carbon.database.utils.version.range>
         <argLine />
         <bcprov-jdk18on.version>1.82</bcprov-jdk18on.version>
+        <xz.version>1.11</xz.version>
     </properties>
 
     <dependencyManagement>
@@ -758,7 +758,7 @@
             <dependency>
                 <groupId>org.tukaani</groupId>
                 <artifactId>xz</artifactId>
-                <version>1.9</version>
+                <version>${xz.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.platform</groupId>
