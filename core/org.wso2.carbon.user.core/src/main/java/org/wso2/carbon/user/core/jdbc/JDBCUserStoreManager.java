@@ -5456,6 +5456,11 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
         }
     }
 
+    /**
+     * Find the large storage required attribute mapping for the current user store.
+     *
+     * @return List of large storage required attributes.
+     */
     protected List<String> findLargeStorageRequiredAttributes() {
 
         /*  During new tenant initialization admin user get provisioned when the default realm is not properly

@@ -110,7 +110,6 @@ public class Claim implements Serializable {
      */
     private boolean isLargeValue;
 
-
     public String getClaimUri() {
         return claimUri;
     }

@@ -3182,12 +3182,15 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
     }
 
     private int getChunkSize() {
-        int chunkSize = 800;
+
+        int chunkSize = 600;
         try {
             ServerConfigurationService config =
                     UserStoreMgtDSComponent.getServerConfigurationService();
-            String chunkSizeStr = config.getFirstProperty(JDBCRealmConstants.PROP_LARGE_ATTRIBUTE_VALUE_CHUNK_SIZE);
-            chunkSize = Integer.parseInt(chunkSizeStr);
+            if (config != null) {
+                String chunkSizeStr = config.getFirstProperty(JDBCRealmConstants.PROP_LARGE_ATTRIBUTE_VALUE_CHUNK_SIZE);
+                chunkSize = Integer.parseInt(chunkSizeStr);
+            }
         } catch (NumberFormatException e) {
             if (log.isDebugEnabled()) {
                 log.debug("Invalid chunk size configured for large attribute values. Defaulting to 800 characters.", e);
@@ -3197,12 +3200,15 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
     }
 
     private int getMaxAttributeValueLength() {
-        int maxLength = 5000;
+
+        int maxLength = 3000;
         try {
             ServerConfigurationService config =
                     UserStoreMgtDSComponent.getServerConfigurationService();
-            String maxLengthStr = config.getFirstProperty(JDBCRealmConstants.PROP_LARGE_ATTRIBUTE_VALUE_MAX_LENGTH);
-            maxLength = Integer.parseInt(maxLengthStr);
+            if (config != null) {
+                String maxLengthStr = config.getFirstProperty(JDBCRealmConstants.PROP_LARGE_ATTRIBUTE_VALUE_MAX_LENGTH);
+                maxLength = Integer.parseInt(maxLengthStr);
+            }
         } catch (NumberFormatException e) {
             if (log.isDebugEnabled()) {
                 log.debug("Invalid maximum attribute value length configured. Defaulting to 4000 characters.", e);
@@ -3217,9 +3223,9 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
         List<String> valueChunks = new ArrayList<>();
         int startIndex = 0;
         int valueLength = value.length();
-        if (valueLength <= maxLength) {
-            throw new UserStoreClientException("The value length is within the maximum length limit. " +
-                    "No need to chunk the value. Value: " + value);
+        if (valueLength > maxLength) {
+            throw new UserStoreClientException("The length of the attribute value exceeds the maximum " +
+                    "allowed length of " + maxLength + " characters.");
         }
         while (startIndex < valueLength) {
             int endIndex = Math.min(startIndex + chunkSize, valueLength);
