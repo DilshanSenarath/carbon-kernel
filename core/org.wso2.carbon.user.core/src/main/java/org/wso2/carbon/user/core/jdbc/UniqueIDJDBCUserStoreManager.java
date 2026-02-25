@@ -3175,7 +3175,7 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
 
     private int getChunkSize() {
 
-        int chunkSize = 600;
+        int chunkSize = 591;
         try {
             ServerConfigurationService config =
                     UserStoreMgtDSComponent.getServerConfigurationService();
