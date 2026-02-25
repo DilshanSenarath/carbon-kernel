@@ -106,9 +106,9 @@ public class Claim implements Serializable {
     private Set<String> excludedUserStores;
 
     /**
-     * Indicates whether the claim is large value which requires special handling in the user store.
+     * Indicates whether the claim is extended value which requires special handling in the user store.
      */
-    private boolean isLargeValue;
+    private boolean extendedValued;
 
     public String getClaimUri() {
         return claimUri;
@@ -245,20 +245,20 @@ public class Claim implements Serializable {
     }
 
     /**
-     * Indicates whether the claim is large value which requires special handling in the user store.
+     * Indicates whether the claim is extended value which requires special handling in the user store.
      * @return true if enabled, false otherwise.
      */
-    public boolean isLargeValue() {
+    public boolean isExtendedValued() {
 
-        return isLargeValue;
+        return extendedValued;
     }
 
     /**
-     * Sets the claim to be large value which requires special handling in the user store.
-     * @param largeValue true to enable, false to disable.
+     * Sets the claim to be extended value which requires special handling in the user store.
+     * @param extendedValued true to enable, false to disable.
      */
-    public void setIsLargeValue(boolean largeValue) {
+    public void setExtendedValued(boolean extendedValued) {
 
-        isLargeValue = largeValue;
+        this.extendedValued = extendedValued;
     }
 }

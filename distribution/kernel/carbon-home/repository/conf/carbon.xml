@@ -776,8 +776,10 @@
 
     <JDBCUserStore>
         <enableOptimizedJDBCSearch>true</enableOptimizedJDBCSearch>
-        <largeAttributeValueChunkSize>600</largeAttributeValueChunkSize>
-        <largeAttributeValueMaxLength>3000</largeAttributeValueMaxLength>
+        <ExtendedAttributes>
+            <ChunkSize>600</ChunkSize>
+            <MaxLength>3000</MaxLength>
+        </ExtendedAttributes>
     </JDBCUserStore>
 
 </Server>
