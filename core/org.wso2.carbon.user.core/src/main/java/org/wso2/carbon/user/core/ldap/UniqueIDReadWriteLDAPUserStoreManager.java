@@ -365,6 +365,7 @@ public class UniqueIDReadWriteLDAPUserStoreManager extends UniqueIDReadOnlyLDAPU
                                 UserCoreErrorConstants.ErrorMessages.ERROR_CODE_USER_ALREADY_EXISTS.getMessage(),
                         UserCoreErrorConstants.ErrorMessages.ERROR_CODE_USER_ALREADY_EXISTS.getCode());
             } else {
+                log.error("Failed to persist user: " + userName + ". Error: " + e.getMessage());
                 throw new UserStoreException(errorMessage, e);
             }
         } finally {
