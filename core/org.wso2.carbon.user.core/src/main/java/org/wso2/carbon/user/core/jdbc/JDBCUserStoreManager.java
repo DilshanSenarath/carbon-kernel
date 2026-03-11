@@ -1264,6 +1264,7 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
                 prepStmt.setInt(4, tenantId);
             }
             List<String> multiValuedAttributes = null;
+            List<String> extendedStorageRequiredAttributes = null;
             String multiAttributeSeparator = realmConfig.getUserStoreProperty(MULTI_ATTRIBUTE_SEPARATOR);
 
             rs = prepStmt.executeQuery();
@@ -1275,11 +1276,18 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
                 }
                 // Handle multi valued attributes.
                 if (map.containsKey(name)) {
+                    /* Handle attributes that require extended storage. Append the new value to the existing value
+                       since the existing value may be truncated due to the length limit of the database column. */
+                    if (extendedStorageRequiredAttributes == null) {
+                        extendedStorageRequiredAttributes = findExtendedStorageRequiredAttributes();
+                    }
                     if (multiValuedAttributes == null) {
                         multiValuedAttributes = findMultiValuedAttributes();
                     }
                     if (multiValuedAttributes.contains(name)) {
                         value = map.get(name) + multiAttributeSeparator + value;
+                    } else if (extendedStorageRequiredAttributes.contains(name)) {
+                        value = map.get(name) + value;
                     }
                 }
                 map.put(name, value);
@@ -5433,6 +5441,31 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
         try {
             return Arrays.stream(claimManager.getAllClaimMappings())
                     .filter(claimMapping -> claimMapping.getClaim().isMultiValued())
+                    .map(claimMapping -> claimMapping.getMappedAttribute(domain) != null ?
+                            claimMapping.getMappedAttribute(domain) : claimMapping.getMappedAttribute())
+                    .collect(Collectors.toList());
+        } catch (org.wso2.carbon.user.api.UserStoreException e) {
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * Find the extended storage required attribute mapping for the current user store.
+     *
+     * @return List of extended storage required attributes.
+     */
+    protected List<String> findExtendedStorageRequiredAttributes() {
+
+        /*  During new tenant initialization admin user get provisioned when the default realm is not properly
+            initialized. That case required to be handled by identifying the tenant set in the user store manager and the
+            context is different. */
+        if (CarbonContext.getThreadLocalCarbonContext().getTenantId() != this.tenantId) {
+            return new ArrayList<>();
+        }
+        String domain = realmConfig.getUserStoreProperty(UserCoreConstants.RealmConfig.PROPERTY_DOMAIN_NAME);
+        try {
+            return Arrays.stream(claimManager.getAllClaimMappings())
+                    .filter(claimMapping -> claimMapping.getClaim().isExtendedValued())
                     .map(claimMapping -> claimMapping.getMappedAttribute(domain) != null ?
                             claimMapping.getMappedAttribute(domain) : claimMapping.getMappedAttribute())
                     .collect(Collectors.toList());

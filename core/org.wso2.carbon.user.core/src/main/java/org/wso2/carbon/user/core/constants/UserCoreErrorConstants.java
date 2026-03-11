@@ -145,6 +145,8 @@ public class UserCoreErrorConstants {
                 + " %s"),
         ERROR_CODE_ERROR_DURING_POST_SET_USER_CLAIM_VALUES("39003", "Un-expected error during post step of set user "
                 + "claim values, %s"),
+        ERROR_CODE_ERROR_EXCEED_MAX_CLAIM_LENGTH("39004",
+                "Provided claim value exceeds the maximum allowed length of %d characters."),
 
         // Error code related with deleting user claim values.
         ERROR_CODE_ERROR_DURING_PRE_DELETE_USER_CLAIM_VALUES("31101", "Un-expected error during pre-step of deleting "

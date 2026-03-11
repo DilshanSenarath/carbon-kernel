@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.CarbonConstants;
 import org.wso2.carbon.base.ServerConfiguration;
+import org.wso2.carbon.base.api.ServerConfigurationService;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.user.api.Property;
 import org.wso2.carbon.user.api.RealmConfiguration;
@@ -48,6 +49,7 @@ import org.wso2.carbon.user.core.common.RoleContext;
 import org.wso2.carbon.user.core.common.UniqueIDPaginatedSearchResult;
 import org.wso2.carbon.user.core.common.UniqueIDPaginatedUsernameSearchResult;
 import org.wso2.carbon.user.core.common.User;
+import org.wso2.carbon.user.core.internal.UserStoreMgtDSComponent;
 import org.wso2.carbon.user.core.jdbc.caseinsensitive.JDBCCaseInsensitiveConstants;
 import org.wso2.carbon.user.core.model.Condition;
 import org.wso2.carbon.user.core.model.ExpressionAttribute;
@@ -106,6 +108,7 @@ import static org.wso2.carbon.user.core.constants.UserCoreErrorConstants.ErrorMe
 import static org.wso2.carbon.user.core.constants.UserCoreErrorConstants.ErrorMessages.ERROR_CODE_DUPLICATE_WHILE_WRITING_TO_DATABASE;
 import static org.wso2.carbon.user.core.constants.UserCoreErrorConstants.ErrorMessages.ERROR_EMPTY_GROUP_ID;
 import static org.wso2.carbon.user.core.constants.UserCoreErrorConstants.ErrorMessages.ERROR_EMPTY_GROUP_NAME;
+import static org.wso2.carbon.user.core.constants.UserCoreErrorConstants.ErrorMessages.ERROR_CODE_ERROR_EXCEED_MAX_CLAIM_LENGTH;
 import static org.wso2.carbon.user.core.constants.UserCoreErrorConstants.ErrorMessages.ERROR_NO_GROUP_FOUND_WITH_ID;
 import static org.wso2.carbon.user.core.constants.UserCoreErrorConstants.ErrorMessages.ERROR_SORTING_NOT_SUPPORTED;
 import static org.wso2.carbon.user.core.constants.UserCoreErrorConstants.ErrorMessages.ERROR_UNSUPPORTED_DATE_SEARCH_FILTER;
@@ -591,6 +594,7 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
                 prepStmt.setInt(4, tenantId);
             }
             List<String> multiValuedProperties = null;
+            List<String> extendedStorageRequiredAttributes = null;
             String multiAttributeSeparator = realmConfig.getUserStoreProperty(MULTI_ATTRIBUTE_SEPARATOR);
 
             rs = prepStmt.executeQuery();
@@ -603,11 +607,18 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
 
                 // Handle multi valued attributes.
                 if (map.containsKey(name)) {
+                    /* Handle attributes that require extended storage. Append the new value to the existing value
+                       since the existing value may be truncated due to the length limit of the database column. */
+                    if (extendedStorageRequiredAttributes == null) {
+                        extendedStorageRequiredAttributes = findExtendedStorageRequiredAttributes();
+                    }
                     if (multiValuedProperties == null) {
                         multiValuedProperties = findMultiValuedAttributes();
                     }
                     if (multiValuedProperties.contains(name)) {
                         value = map.get(name) + multiAttributeSeparator + value;
+                    } else if (extendedStorageRequiredAttributes.contains(name)) {
+                        value = map.get(name) + value;
                     }
                 }
                 map.put(name, value);
@@ -2051,6 +2062,14 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
             List<String> multiValuedAttributes = findMultiValuedAttributes();
             multiValuedAttributes = multiValuedAttributes.stream().filter(receivedProperties::contains)
                     .collect(Collectors.toList());
+
+            /* Extended storage required attributes are also treated as multivalued attributes as they require special
+               handling in the user store. */
+            List<String> extendedStorageRequiredAttributes = findExtendedStorageRequiredAttributes();
+            extendedStorageRequiredAttributes = extendedStorageRequiredAttributes.stream()
+                    .filter(receivedProperties::contains).collect(Collectors.toList());
+            multiValuedAttributes.addAll(extendedStorageRequiredAttributes);
+
             deleteMultiValuedAttributes(dbConnection, userId, multiValuedAttributes, profileName);
             multiValuedAttributes.forEach(alreadyAvailableProperties.keySet()::remove);
             addPropertiesWithID(dbConnection, userId, filterNewlyAddedProperties(processedClaimAttributes,
@@ -2867,6 +2886,7 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
                 prepStmt.setInt(index, tenantId);
             }
             List<String> multiValuedAttributes = null;
+            List<String> extendedStorageRequiredAttributes = null;
             String multiAttributeSeparator = realmConfig.getUserStoreProperty(MULTI_ATTRIBUTE_SEPARATOR);
 
             rs = prepStmt.executeQuery();
@@ -2882,11 +2902,18 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
                     Map<String, String> map = usersPropertyValuesMap.get(userID);
                     // Handle multi valued attributes.
                     if (map.containsKey(name)) {
+                        /* Handle attributes that require extended storage. Append the new value to the existing value
+                       since the existing value may be truncated due to the length limit of the database column. */
+                        if (extendedStorageRequiredAttributes == null) {
+                            extendedStorageRequiredAttributes = findExtendedStorageRequiredAttributes();
+                        }
                         if (multiValuedAttributes == null) {
                             multiValuedAttributes = findMultiValuedAttributes();
                         }
                         if (multiValuedAttributes.contains(name)) {
                             value = map.get(name) + multiAttributeSeparator + value;
+                        } else if (extendedStorageRequiredAttributes.contains(name)) {
+                            value = map.get(name) + value;
                         }
                     }
                     map.put(name, value);
@@ -3065,6 +3092,7 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
         }
 
         List<String> multiValuedAttributes = findMultiValuedAttributes();
+        List<String> extendedStorageRequiredAttributes = findExtendedStorageRequiredAttributes();
         String multiAttributeSeparator = realmConfig.getUserStoreProperty(MULTI_ATTRIBUTE_SEPARATOR);
 
         PreparedStatement prepStmt = null;
@@ -3085,12 +3113,16 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
                 userAttributes.put(attributeName, attributeValue);
             }
 
+            int chunkSize = getChunkSize();
+            int maxLength = getMaxAttributeValueLength();
             for (Map.Entry<String, String> entry : userAttributes.entrySet()) {
                 String propertyName = entry.getKey();
                 List<String> propertyValues = new ArrayList<>();
                 if (multiValuedAttributes.contains(propertyName)) {
                     String[] values = entry.getValue().split(multiAttributeSeparator);
                     propertyValues.addAll(Arrays.asList(values));
+                } else if (extendedStorageRequiredAttributes.contains(propertyName)) {
+                    propertyValues.addAll(chunkExtendedAttributeValues(entry.getValue(), maxLength, chunkSize));
                 } else {
                     propertyValues.add(entry.getValue());
                 }
@@ -3136,12 +3168,74 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
                 log.debug(msg, e);
             }
             throw new UserStoreException(msg, e);
-        } finally {
+        } catch (UserStoreClientException e) {
+            if (ERROR_CODE_ERROR_EXCEED_MAX_CLAIM_LENGTH.getCode().equals(e.getErrorCode())) {
+                DatabaseUtil.rollBack(dbConnection);
+                throw e;
+            }
+        }
+        finally {
             if (localConnection) {
                 DatabaseUtil.closeAllConnections(dbConnection);
             }
             DatabaseUtil.closeAllConnections(null, prepStmt);
         }
+    }
+
+    private int getChunkSize() {
+
+        int chunkSize = 591;
+        try {
+            ServerConfigurationService config =
+                    UserStoreMgtDSComponent.getServerConfigurationService();
+            if (config != null) {
+                String chunkSizeStr = config.getFirstProperty(JDBCRealmConstants.PROP_EXTENDED_ATTRIBUTE_VALUE_CHUNK_SIZE);
+                chunkSize = Integer.parseInt(chunkSizeStr);
+            }
+        } catch (NumberFormatException e) {
+            if (log.isDebugEnabled()) {
+                log.debug("Invalid chunk size configured for extended attribute values. " +
+                        "Defaulting to 600 characters.", e);
+            }
+        }
+        return chunkSize;
+    }
+
+    private int getMaxAttributeValueLength() {
+
+        int maxLength = 3000;
+        try {
+            ServerConfigurationService config =
+                    UserStoreMgtDSComponent.getServerConfigurationService();
+            if (config != null) {
+                String maxLengthStr = config.getFirstProperty(JDBCRealmConstants.PROP_EXTENDED_ATTRIBUTE_VALUE_MAX_LENGTH);
+                maxLength = Integer.parseInt(maxLengthStr);
+            }
+        } catch (NumberFormatException e) {
+            if (log.isDebugEnabled()) {
+                log.debug("Invalid maximum attribute value length configured. Defaulting to 3000 characters.", e);
+            }
+        }
+        return maxLength;
+    }
+
+    private List<String> chunkExtendedAttributeValues(String value, int maxLength, int chunkSize)
+            throws UserStoreClientException {
+
+        List<String> valueChunks = new ArrayList<>();
+        int startIndex = 0;
+        int valueLength = value.length();
+        if (valueLength > maxLength) {
+            throw new UserStoreClientException(
+                    String.format(ERROR_CODE_ERROR_EXCEED_MAX_CLAIM_LENGTH.getMessage(), maxLength),
+                    ERROR_CODE_ERROR_EXCEED_MAX_CLAIM_LENGTH.getCode());
+        }
+        while (startIndex < valueLength) {
+            int endIndex = Math.min(startIndex + chunkSize, valueLength);
+            valueChunks.add(value.substring(startIndex, endIndex));
+            startIndex = endIndex;
+        }
+        return valueChunks;
     }
 
     /**

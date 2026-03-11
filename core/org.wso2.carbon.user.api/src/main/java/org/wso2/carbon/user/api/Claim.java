@@ -105,6 +105,11 @@ public class Claim implements Serializable {
      */
     private Set<String> excludedUserStores;
 
+    /**
+     * Indicates whether the claim is extended value which requires special handling in the user store.
+     */
+    private boolean extendedValued;
+
     public String getClaimUri() {
         return claimUri;
     }
@@ -237,5 +242,23 @@ public class Claim implements Serializable {
     public void setExcludedUserStores(Set<String> excludedUserStores) {
 
         this.excludedUserStores = excludedUserStores;
+    }
+
+    /**
+     * Indicates whether the claim is extended value which requires special handling in the user store.
+     * @return true if enabled, false otherwise.
+     */
+    public boolean isExtendedValued() {
+
+        return extendedValued;
+    }
+
+    /**
+     * Sets the claim to be extended value which requires special handling in the user store.
+     * @param extendedValued true to enable, false to disable.
+     */
+    public void setExtendedValued(boolean extendedValued) {
+
+        this.extendedValued = extendedValued;
     }
 }

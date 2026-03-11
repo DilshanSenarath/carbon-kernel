@@ -911,6 +911,10 @@
     <!-- Optimize the user search through UIDs in UniqueJDBCUserStore -->
     <JDBCUserStore>
         <enableOptimizedJDBCSearch>{{jdbc_user_store.enable_optimized_jdbc_search}}</enableOptimizedJDBCSearch>
+        <ExtendedAttributes>
+            <ChunkSize>{{jdbc_user_store.extended_attributes.chunk_size}}</ChunkSize>
+            <MaxLength>{{jdbc_user_store.extended_attributes.max_length}}</MaxLength>
+        </ExtendedAttributes>
     </JDBCUserStore>
 
     <!-- Enable/Disable the deprecation banner in the management console -->
