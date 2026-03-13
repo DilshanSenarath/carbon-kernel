@@ -1,0 +1,20 @@
+language: "en-US"
+early_access: false
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  high_level_summary_in_walkthrough: true
+  sequence_diagrams: false
+  estimate_code_review_effort: true
+  auto_assign_reviewers: false
+  poem: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "4.12.x"
+    ignore_usernames:
+      - "wso2-jenkins-bot"
+chat:
+  auto_reply: true
