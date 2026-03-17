@@ -315,6 +315,7 @@ do
     -Djava.command="$JAVACMD" \
     -Dcarbon.home="$CARBON_HOME" \
     -Djava.library.path="$CARBON_HOME/lib" \
+    -Dorg.bouncycastle.jsse.client.assumeOriginalHostName=true \
     -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
     -Dcarbon.config.dir.path="$CARBON_HOME/repository/conf" \
     -Djava.util.logging.config.file="$CARBON_HOME/repository/conf/etc/logging-bridge.properties" \
