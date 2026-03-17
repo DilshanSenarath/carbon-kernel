@@ -85,6 +85,37 @@ class TenantDomainCache {
     }
 
     /**
+     * Add a cache entry during a READ operation.
+     * <p>
+     * This populates the cache only if the key does not already have a value.
+     * If a value already exists, the cache is left unchanged, which avoids
+     * unnecessary cache invalidation broadcasts in clustered environments.
+     * <p>
+     * Add a cache entry.
+     *
+     * @param key   Key which cache entry is indexed.
+     * @param entry Actual object where cache entry is placed.
+     */
+    public void addToCacheOnRead(TenantIdKey key, TenantDomainEntry entry) {
+
+        try {
+            startSuperTenantFlow();
+            Cache<TenantIdKey, TenantDomainEntry> cache = getTenantDomainCache();
+            if (cache != null) {
+                cache.putOnRead(key, entry);
+                log.debug(TENANT_DOMAIN_CACHE + " which is under " + TENANT_DOMAIN_CACHE_MANAGER + ", added the entry : " + entry
+                        + " for the key : " + key + " successfully");
+            } else {
+                if (log.isDebugEnabled()) {
+                    log.debug("Error while getting the cache : " + TENANT_DOMAIN_CACHE + " which is under " + TENANT_DOMAIN_CACHE_MANAGER);
+                }
+            }
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+    }
+
+    /**
      * Retrieves a cache entry.
      *
      * @param key CacheKey

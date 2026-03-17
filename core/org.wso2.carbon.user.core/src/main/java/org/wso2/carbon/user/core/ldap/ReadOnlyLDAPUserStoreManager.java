@@ -908,7 +908,7 @@ public class ReadOnlyLDAPUserStoreManager extends AbstractUserStoreManager {
                         if (userDN != null && userDN.length() > 0) {
                             bFound = true;
                             LdapName ldapName = new LdapName(userDN);
-                            putToUserCache(userName, ldapName);
+                            putToUserCacheOnRead(userName, ldapName);
                             break;
                         }
                     }
@@ -2525,7 +2525,7 @@ public class ReadOnlyLDAPUserStoreManager extends AbstractUserStoreManager {
             }
             if (userDN != null) {
                 LdapName ldn = new LdapName(userDN);
-                putToUserCache(userName, ldn);
+                putToUserCacheOnRead(userName, ldn);
             }
             if (debug) {
                 log.debug("Name in space for " + userName + " is " + userDN);
@@ -4654,6 +4654,35 @@ public class ReadOnlyLDAPUserStoreManager extends AbstractUserStoreManager {
                 return;
             }
             userDnCache.put(name, value);
+        } catch (IllegalStateException e) {
+            // There is no harm ignoring the put, as the cache(local) is already is of no use. Mis-penalty is low.
+            log.error("Error occurred while putting User DN to the cache having search base : " + userSearchBase, e);
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+    }
+
+    /**
+     * Puts the DN into the cache.
+     * <p>
+     * Add a cache entry during a READ operation.
+     * <p>
+     * This populates the cache only if the key does not already have a value.
+     * If a value already exists, the cache is left unchanged, which avoids
+     * unnecessary cache invalidation broadcasts in clustered environments.
+     *
+     * @param name  the username.
+     * @param value the LDAP name (DN)
+     */
+    protected void putToUserCacheOnRead(String name, LdapName value) {
+        try {
+            startTenantFlow();
+            Cache<String, LdapName> userDnCache = createOrGetUserDnCache();
+            if (userDnCache == null) {
+                // User cache may be null while initializing.
+                return;
+            }
+            userDnCache.putOnRead(name, value);
         } catch (IllegalStateException e) {
             // There is no harm ignoring the put, as the cache(local) is already is of no use. Mis-penalty is low.
             log.error("Error occurred while putting User DN to the cache having search base : " + userSearchBase, e);

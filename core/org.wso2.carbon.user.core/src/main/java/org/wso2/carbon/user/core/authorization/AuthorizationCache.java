@@ -124,6 +124,39 @@ public class AuthorizationCache {
     }
 
     /**
+     * Add a cache entry during a READ operation.
+     * This populates the cache only if the key does not already have a value.
+     * If a value already exists, the cache is left unchanged, which avoids
+     * unnecessary cache invalidation broadcasts in clustered environments.
+     * <p>
+     * Adds an entry to the cache. Says whether given user or role is authorized
+     * or not.
+     *
+     * @param serverId     unique identifier for carbon server instance
+     * @param userName     Name of the user which was authorized. If this is null
+     *                     roleName must not be null.
+     * @param resourceId   The resource on which user/role was authorized.
+     * @param action       The action which user/role authorized for.
+     * @param isAuthorized Whether role/user was authorized or not. <code>true</code> for
+     *                     authorized else <code>false</code>.
+     */
+    public void addToCacheOnRead(String serverId, int tenantId, String userName,
+                           String resourceId, String action, boolean isAuthorized) {
+
+        if (!isCaseSensitiveUsername(userName, tenantId)) {
+            userName = userName.toLowerCase();
+        }
+
+        Cache<AuthorizationKey, AuthorizeCacheEntry> cache = this.getAuthorizationCache();
+        if (isCacheNull(cache)) {
+            return;
+        }
+        AuthorizationKey key = new AuthorizationKey(serverId, tenantId, userName, resourceId, action);
+        AuthorizeCacheEntry cacheEntry = new AuthorizeCacheEntry(isAuthorized);
+        cache.putOnRead(key, cacheEntry);
+    }
+
+    /**
      * Looks up from cache whether given user is already authorized. If an entry
      * is not found throws an exception.
      *

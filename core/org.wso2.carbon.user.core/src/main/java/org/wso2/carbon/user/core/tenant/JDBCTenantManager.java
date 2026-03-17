@@ -498,9 +498,9 @@ public class JDBCTenantManager implements TenantManager {
                             + ", hence adding tenant to cache where tenantDomain: {" + domain + "}");
                 }
                 tenantDomainNameValidation(domain);
-                tenantCacheManager.addToCache(new TenantIdKey(id), new TenantCacheEntry<Tenant>(tenant));
-                tenantDomainCache.addToCache(new TenantIdKey(id), new TenantDomainEntry(domain));
-                tenantIdCache.addToCache(new TenantDomainKey(domain), new TenantIdEntry(id));
+                tenantCacheManager.addToCacheOnRead(new TenantIdKey(id), new TenantCacheEntry<Tenant>(tenant));
+                tenantDomainCache.addToCacheOnRead(new TenantIdKey(id), new TenantDomainEntry(domain));
+                tenantIdCache.addToCacheOnRead(new TenantDomainKey(domain), new TenantIdEntry(id));
             }
             dbConnection.commit();
         } catch (SQLException e) {
@@ -648,7 +648,7 @@ public class JDBCTenantManager implements TenantManager {
                         + "tenant ID:" + tenantId + ", hence adding tenant domain and tenant ID to cache.");
             }
             tenantDomainNameValidation(tenantDomain);
-            tenantDomainCache.addToCache(tenantIdKey, new TenantDomainEntry(tenantDomain));
+            tenantDomainCache.addToCacheOnRead(tenantIdKey, new TenantDomainEntry(tenantDomain));
             tenantIdCache.addToCache(new TenantDomainKey(tenantDomain), new TenantIdEntry(tenantId));
         }
 
@@ -750,7 +750,7 @@ public class JDBCTenantManager implements TenantManager {
                             + tenantDomain + "}, hence adding tenant domain and tenant ID to cache.");
                 }
                 tenantDomainNameValidation(tenantDomain);
-                tenantIdCache.addToCache(tenantDomainKey, new TenantIdEntry(tenantId));
+                tenantIdCache.addToCacheOnRead(tenantDomainKey, new TenantIdEntry(tenantId));
                 tenantDomainCache.addToCache(new TenantIdKey(tenantId), new TenantDomainEntry(tenantDomain));
             }
         } catch (SQLException e) {
@@ -830,10 +830,11 @@ public class JDBCTenantManager implements TenantManager {
                             + ", hence adding tenant to cache where tenantDomain: {" + domain + "}");
                 }
                 tenantDomainNameValidation(domain);
-                tenantUniqueIdCache.addToCache(new TenantUniqueIDKey(uniqueId), new TenantCacheEntry<Tenant>(tenant));
-                tenantCacheManager.addToCache(new TenantIdKey(id), new TenantCacheEntry<Tenant>(tenant));
-                tenantDomainCache.addToCache(new TenantIdKey(id), new TenantDomainEntry(domain));
-                tenantIdCache.addToCache(new TenantDomainKey(domain), new TenantIdEntry(id));
+                tenantUniqueIdCache
+                        .addToCacheOnRead(new TenantUniqueIDKey(uniqueId), new TenantCacheEntry<Tenant>(tenant));
+                tenantCacheManager.addToCacheOnRead(new TenantIdKey(id), new TenantCacheEntry<Tenant>(tenant));
+                tenantDomainCache.addToCacheOnRead(new TenantIdKey(id), new TenantDomainEntry(domain));
+                tenantIdCache.addToCacheOnRead(new TenantDomainKey(domain), new TenantIdEntry(id));
             }
             dbConnection.commit();
         } catch (SQLException e) {

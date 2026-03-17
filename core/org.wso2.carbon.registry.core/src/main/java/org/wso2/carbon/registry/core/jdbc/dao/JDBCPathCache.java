@@ -450,6 +450,74 @@ public class JDBCPathCache extends PathCache {
     }
 
     /**
+     * Method to get the path of a given path id.
+     * <p>
+     * Add a cache entry during a READ operation.
+     * <p>
+     * This populates the cache only if the key does not already have a value.
+     * If a value already exists, the cache is left unchanged, which avoids
+     * unnecessary cache invalidation broadcasts in clustered environments.
+     *
+     * @param conn the database connection to use.
+     * @param id the path.
+     *
+     * @return the path corresponding to the given path id.
+     * @throws SQLException if an error occurs while obtaining the path id.
+     */
+    public String getPathOnRead(AbstractConnection conn, int id) throws SQLException {
+
+        String connectionId;
+        if (conn != null && conn.getConnectionId() != null) {
+            connectionId = conn.getConnectionId();
+        } else {
+            throw new SQLException("Connection is null");
+        }
+        RegistryCacheKey key =
+                RegistryUtils.buildRegistryCacheKey(connectionId,
+                        CurrentSession.getTenantId(), Integer.toString(id));
+        Cache<RegistryCacheKey, RegistryCacheEntry> cache = getCache();
+        RegistryCacheEntry result = cache.get(key);
+        if (result != null) {
+            return result.getPath();
+        } else {
+            PreparedStatement ps = null;
+            ResultSet results = null;
+            try {
+                String sql =
+                        "SELECT REG_PATH_VALUE FROM REG_PATH WHERE REG_PATH_ID=? AND REG_TENANT_ID=?";
+
+                ps = conn.prepareStatement(sql);
+                ps.setInt(1, id);
+                ps.setInt(2, CurrentSession.getTenantId());
+
+                results = ps.executeQuery();
+                if (results.next()) {
+                    result = new RegistryCacheEntry(results.getString(DatabaseConstants.PATH_VALUE_FIELD));
+                    cache.putOnRead(key, result);
+                    return result.getPath();
+                }
+
+            } finally {
+                try {
+                    try {
+                        if (results != null) {
+                            results.close();
+                        }
+                    } finally {
+                        if (ps != null) {
+                            ps.close();
+                        }
+                    }
+                } catch (SQLException ex) {
+                    String msg = RegistryConstants.RESULT_SET_PREPARED_STATEMENT_CLOSE_ERROR;
+                    log.error(msg, ex);
+                }
+            }
+            return null;
+        }
+    }
+
+    /**
      * Method to get the path id of a given path.
      *
      * @param conn the database connection to use.
@@ -512,6 +580,102 @@ public class JDBCPathCache extends PathCache {
                     //not found . set -1 in the cache as well for the path
                     RegistryCacheEntry e = new RegistryCacheEntry(-1);
                     cache.put(key, e);
+                }
+
+            } catch (SQLException e) {
+                String msg = "Failed to retrieving resource from " + path + ". " + e.getMessage();
+                log.error(msg, e);
+                throw e;
+            } finally {
+                try {
+                    try {
+                        if (results != null) {
+                            results.close();
+                        }
+                    } finally {
+                        if (ps != null) {
+                            ps.close();
+                        }
+                    }
+                } catch (SQLException e) {
+                    String msg = RegistryConstants.RESULT_SET_PREPARED_STATEMENT_CLOSE_ERROR +
+                            e.getMessage();
+                    log.error(msg, e);
+                }
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Method to get the path id of a given path.
+     * <p>
+     * Add a cache entry during a READ operation.
+     * <p>
+     * This populates the cache only if the key does not already have a value.
+     * If a value already exists, the cache is left unchanged, which avoids
+     * unnecessary cache invalidation broadcasts in clustered environments.
+     *
+     * @param conn the database connection to use.
+     * @param path the path.
+     *
+     * @return the path id corresponding to the given path.
+     * @throws SQLException if an error occurs while obtaining the path id.
+     */
+    public int getPathIDOnRead(AbstractConnection conn, String path) throws SQLException {
+        String connectionId = null;
+        if (conn != null && conn.getConnectionId() != null) {
+            connectionId = conn.getConnectionId();
+        } else {
+            throw new SQLException("Connection is null");
+        }
+        RegistryCacheKey key =
+                RegistryUtils.buildRegistryCacheKey(connectionId,
+                        CurrentSession.getTenantId(), path);
+        Cache<RegistryCacheKey,RegistryCacheEntry> cache = getCache();
+        RegistryCacheEntry result = (RegistryCacheEntry) cache.get(key);
+
+        // TODO: FIX: Path Cache should only be updated if the key yields a valid registry path.
+        // Recently, this has lead to:
+        // org.wso2.carbon.registry.core.exceptions.RegistryException: Failed to add resource to
+        // path /_system. Cannot add or update a child row: a foreign key constraint fails
+        // (`stratos_db`.`REG_RESOURCE`, CONSTRAINT `REG_RESOURCE_FK_BY_PATH_ID` FOREIGN KEY
+        // (`REG_PATH_ID`, `REG_TENANT_ID`) REFERENCES `REG_PATH` (`REG_PATH_ID`, `REG_TENANT_ID`))
+        //
+        // when registry separation is enabled. Thus, we need a better solution to address this, and
+        // a better key which also contains the name of the DB in use. Un-comment the below once
+        // this has been done.
+        //
+        // IMPORTANT: Never remove this comment until we are certain that the current fix is
+        // actually working - Senaka.
+
+        if (result != null) {
+            return result.getPathId();
+        } else {
+            ResultSet results = null;
+            PreparedStatement ps = null;
+            try {
+                String sql =
+                        "SELECT REG_PATH_ID FROM REG_PATH WHERE REG_PATH_VALUE=? " +
+                                "AND REG_TENANT_ID=?";
+                ps = conn.prepareStatement(sql);
+                ps.setString(1, path);
+                ps.setInt(2, CurrentSession.getTenantId());
+                results = ps.executeQuery();
+
+                int pathId;
+                if (results.next()) {
+                    pathId = results.getInt(DatabaseConstants.PATH_ID_FIELD);
+
+                    if (pathId > 0) {
+                        RegistryCacheEntry e = new RegistryCacheEntry(pathId);
+                        cache.putOnRead(key, e);
+                        return pathId;
+                    }
+                } else {
+                    //not found . set -1 in the cache as well for the path
+                    RegistryCacheEntry e = new RegistryCacheEntry(-1);
+                    cache.putOnRead(key, e);
                 }
 
             } catch (SQLException e) {

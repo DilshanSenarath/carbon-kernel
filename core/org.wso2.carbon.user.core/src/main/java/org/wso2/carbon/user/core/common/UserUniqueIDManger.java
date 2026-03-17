@@ -117,6 +117,63 @@ public class UserUniqueIDManger {
         return user;
     }
 
+    /**
+     * Add a cache entry during a READ operation.
+     * <p>
+     * This populates the cache only if the key does not already have a value.
+     * If a value already exists, the cache is left unchanged, which avoids
+     * unnecessary cache invalidation broadcasts in clustered environments.
+     * <p>
+     * Get user from unique id.
+     * @param uniqueId User's unique id.
+     * @return User object if user presents for the unique id. Null otherwise.
+     */
+    public User getUserOnRead(String uniqueId, AbstractUserStoreManager userStoreManager)
+            throws UserStoreException {
+
+        return getUserOnRead(uniqueId, userStoreManager, null);
+    }
+
+    /**
+     * Get user from unique id with user store domain present.
+     * @param uniqueId User's unique id.
+     * @param userStoreManager User store manager instance.
+     * @param userStoreDomain User store domain of the user.
+     * @return User object if user presents for the unique id. Null otherwise.
+     */
+    public User getUserOnRead(String uniqueId, AbstractUserStoreManager userStoreManager, String userStoreDomain)
+            throws UserStoreException {
+
+        String userName = getFromUserNameCache(uniqueId);
+        if (StringUtils.isEmpty(userName)) {
+            String[] usernames;
+            if (StringUtils.isNotEmpty(userStoreDomain)) {
+                usernames = userStoreManager.getUserList(UserCoreClaimConstants.USER_ID_CLAIM_URI,
+                        UserCoreUtil.addDomainToName(uniqueId, userStoreDomain), null);
+            } else {
+                usernames = userStoreManager.getUserList(UserCoreClaimConstants.USER_ID_CLAIM_URI,
+                        uniqueId, null);
+            }
+
+            if (usernames.length > 1) {
+                throw new UserStoreException("More than one user presents with the same user unique id.");
+            }
+
+            if (usernames.length == 0) {
+                return null;
+            }
+            userName = usernames[0];
+            addToUserNameCacheOnRead(uniqueId, userName);
+            addToUserIDCacheOnRead(uniqueId, userName);
+        }
+
+        User user = new User();
+        user.setUserID(uniqueId);
+        user.setUsername(UserCoreUtil.removeDomainFromName(userName));
+        user.setUserStoreDomain(UserCoreUtil.extractDomainFromName(userName));
+        return user;
+    }
+
     private void addToUserIDCache(String userID, String userName) {
 
         UserIdResolverCache.getInstance()
@@ -124,10 +181,44 @@ public class UserUniqueIDManger {
                         RESOLVE_USER_UNIQUE_ID_FROM_USER_NAME_CACHE_NAME, SUPER_TENANT_ID);
     }
 
+    /**
+     * Add a cache entry during a READ operation.
+     * <p>
+     * This populates the cache only if the key does not already have a value.
+     * If a value already exists, the cache is left unchanged, which avoids
+     * unnecessary cache invalidation broadcasts in clustered environments.
+     *
+     * @param userID
+     * @param userName
+     */
+    private void addToUserIDCacheOnRead(String userID, String userName) {
+
+        UserIdResolverCache.getInstance()
+                .addToCacheOnRead(userName, userID,
+                        RESOLVE_USER_UNIQUE_ID_FROM_USER_NAME_CACHE_NAME, SUPER_TENANT_ID);
+    }
+
     private void addToUserNameCache(String userID, String userName) {
 
         UserIdResolverCache.getInstance()
                 .addToCache(userID, userName,
+                        RESOLVE_USER_NAME_FROM_UNIQUE_USER_ID_CACHE_NAME, SUPER_TENANT_ID);
+    }
+
+    /**
+     * Add a cache entry during a READ operation.
+     * <p>
+     * This populates the cache only if the key does not already have a value.
+     * If a value already exists, the cache is left unchanged, which avoids
+     * unnecessary cache invalidation broadcasts in clustered environments.
+     *
+     * @param userID
+     * @param userName
+     */
+    private void addToUserNameCacheOnRead(String userID, String userName) {
+
+        UserIdResolverCache.getInstance()
+                .addToCacheOnRead(userID, userName,
                         RESOLVE_USER_NAME_FROM_UNIQUE_USER_ID_CACHE_NAME, SUPER_TENANT_ID);
     }
 

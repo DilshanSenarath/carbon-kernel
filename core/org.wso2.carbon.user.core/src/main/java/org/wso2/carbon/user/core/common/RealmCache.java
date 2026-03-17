@@ -103,6 +103,20 @@ public class RealmCache {
     }
 
     /**
+     * Add a cache entry during a READ operation.
+     * <p>
+     * This populates the cache only if the key does not already have a value.
+     * If a value already exists, the cache is left unchanged, which avoids
+     * unnecessary cache invalidation broadcasts in clustered environments.
+     *
+     */
+    public void addToCacheOnRead(int tenantId, String realmName, UserRealm userRealm) {
+
+        instance.addToCacheOnRead(new RealmCacheKey(tenantId, realmName),
+                new RealmCacheEntry(userRealm));
+    }
+
+    /**
      * Clear the cache entry
      *
      * @param tenantId
@@ -134,6 +148,32 @@ public class RealmCache {
                 cache.remove(key);
             }
             cache.put(key, entry);
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+    }
+
+    /**
+     * Add a cache entry during a READ operation.
+     * <p>
+     * This populates the cache only if the key does not already have a value.
+     * If a value already exists, the cache is left unchanged, which avoids
+     * unnecessary cache invalidation broadcasts in clustered environments.
+     *
+     * @param key   Key which cache entry is indexed.
+     * @param entry Actual object where cache entry is placed.
+     */
+    public void addToCacheOnRead(RealmCacheKey key, RealmCacheEntry entry) {
+
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext carbonContext = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+            carbonContext.setTenantId(MultitenantConstants.SUPER_TENANT_ID);
+            carbonContext.setTenantDomain(MultitenantConstants.SUPER_TENANT_DOMAIN_NAME);
+            Cache<RealmCacheKey, RealmCacheEntry> cache = getRealmCache();
+            if (!cache.containsKey(key)) {
+                cache.putOnRead(key, entry);
+            }
         } finally {
             PrivilegedCarbonContext.endTenantFlow();
         }

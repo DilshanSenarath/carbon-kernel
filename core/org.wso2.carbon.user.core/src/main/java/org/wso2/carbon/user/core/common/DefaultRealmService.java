@@ -188,7 +188,7 @@ public class DefaultRealmService implements RealmService {
                         userRealm = getCachedUserRealm(tenantId);
                         if (userRealm == null) {
                             userRealm = initializeRealm(tenantRealmConfig, tenantId);
-                            realmCache.addToCache(tenantId, PRIMARY_TENANT_REALM, userRealm);
+                            realmCache.addToCacheOnRead(tenantId, PRIMARY_TENANT_REALM, userRealm);
                         }
                     }
                 }
@@ -256,7 +256,7 @@ public class DefaultRealmService implements RealmService {
                     userRealm = (UserRealm) realmCache.getUserRealm(tenantId, PRIMARY_TENANT_REALM);
                     if (userRealm == null) {
                         userRealm = initializeRealm(tenantRealmConfig, tenantId);
-                        realmCache.addToCache(tenantId, PRIMARY_TENANT_REALM, userRealm);
+                        realmCache.addToCacheOnRead(tenantId, PRIMARY_TENANT_REALM, userRealm);
                     }
                 }
             }

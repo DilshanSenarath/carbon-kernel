@@ -1634,8 +1634,8 @@ public class UniqueIDReadOnlyLDAPUserStoreManager extends ReadOnlyLDAPUserStoreM
                 doGetUserListWithID(condition, profileName, limit, offset, sortBy, sortOrder);
         List<String> usernames = new ArrayList<>();
         uniqueIDPaginatedSearchResult.getUsers().forEach(user -> {
-            addToUserIDCache(user.getUserID(), user.getUsername(), getMyDomainName());
-            addToUserNameCache(user.getUserID(), user.getUsername(), getMyDomainName());
+            addToUserIDCacheOnRead(user.getUserID(), user.getUsername(), getMyDomainName());
+            addToUserNameCacheOnRead(user.getUserID(), user.getUsername(), getMyDomainName());
             usernames.add(user.getDomainQualifiedUsername());
         });
         result.setUsers(usernames);

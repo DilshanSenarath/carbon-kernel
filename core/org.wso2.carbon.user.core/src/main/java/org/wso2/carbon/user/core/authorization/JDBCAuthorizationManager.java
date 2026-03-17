@@ -287,7 +287,7 @@ public class JDBCAuthorizationManager implements AuthorizationManager {
                         null, null,
                         PermissionTreeUtil.toComponenets(resourceId));
         if (sr.getLastNodeAllowedAccess()) {
-            authorizationCache.addToCache(cacheIdentifier, tenantId, userName, resourceId, action, true);
+            authorizationCache.addToCacheOnRead(cacheIdentifier, tenantId, userName, resourceId, action, true);
             return true;
         }
 
@@ -370,7 +370,7 @@ public class JDBCAuthorizationManager implements AuthorizationManager {
         }
 
         //need to add the authorization decision taken by role based permission
-        authorizationCache.addToCache(cacheIdentifier, this.tenantId, userName, resourceId, action,
+        authorizationCache.addToCacheOnRead(cacheIdentifier, this.tenantId, userName, resourceId, action,
                 userAllowed);
 
         if (log.isDebugEnabled()) {

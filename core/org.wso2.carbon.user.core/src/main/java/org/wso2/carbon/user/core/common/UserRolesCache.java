@@ -126,6 +126,39 @@ public class UserRolesCache {
         }
     }
 
+    /**
+     * Add a cache entry during a READ operation.
+     * <p>
+     * This populates the cache only if the key does not already have a value.
+     * If a value already exists, the cache is left unchanged, which avoids
+     * unnecessary cache invalidation broadcasts in clustered environments.
+     *
+     */
+    public void addToCacheOnRead(String serverId, int tenantId, String userName, String[] userRoleList) {
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext carbonContext = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+            carbonContext.setTenantId(tenantId, true);
+
+            Cache<UserRolesCacheKey, UserRolesCacheEntry> cache = this.getUserRolesCache();
+            //check for null
+            if (isCacheNull(cache)) {
+                return;
+            }
+            if (!isCaseSensitiveUsername(userName, tenantId)) {
+                userName = userName.toLowerCase();
+            }
+            //create cache key
+            UserRolesCacheKey userRolesCacheKey = new UserRolesCacheKey(serverId, tenantId, userName);
+            //create cache entry
+            UserRolesCacheEntry userRolesCacheEntry = new UserRolesCacheEntry(userRoleList);
+            //add to cache
+            cache.putOnRead(userRolesCacheKey, userRolesCacheEntry);
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+    }
+
     //get roles list of user
     public String[] getRolesListOfUser(String serverId, int tenantId, String userName) {
         try {
