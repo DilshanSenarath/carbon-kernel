@@ -200,6 +200,30 @@ public interface Cache<K, V> extends Iterable<Cache.Entry<K, V>>, CacheLifecycle
     void put(K key, V value);
 
     /**
+     * Associates the specified value with the specified key in this cache only if
+     * the cache does not already contain a value for the key.
+     * <p/>
+     * This method is intended for use when populating the cache as part of read
+     * operations. In clustered deployments, concurrent read operations may retrieve
+     * the same value from the underlying data store. Using this method prevents
+     * those concurrent reads from overwriting an existing cached value and
+     * triggering unnecessary cache-entry update notifications across the cluster.
+     * <p/>
+     * If an entry for the specified key already exists, the cache is left unchanged.
+     * In contrast to {@link #put(Object, Object)}, this method does <em>not</em>
+     * replace existing values.
+     *
+     * @param key   key with which the specified value is to be associated
+     * @param value value to be associated with the specified key if none is present
+     * @throws NullPointerException  if key is null or if value is null
+     * @throws IllegalStateException if the cache is not {@link Status#STARTED}
+     * @throws CacheException        if there is a problem performing the update
+     * @see #put(Object, Object)
+     * @see java.util.Map#putIfAbsent(Object, Object)
+     */
+    void putOnRead(K key, V value);
+
+    /**
      * Associates the specified value with the specified key in this cache
      * If the cache previously contained a mapping for
      * the key, the old value is replaced by the specified value if the value
