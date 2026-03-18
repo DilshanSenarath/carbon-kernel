@@ -37,7 +37,6 @@ import java.security.cert.Certificate;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Iterator;
-import java.util.Map;
 
 import javax.xml.namespace.QName;
 
@@ -45,11 +44,8 @@ import static org.wso2.carbon.utils.multitenancy.MultitenantConstants.SUPER_TENA
 
 public class KeyStoreUtil {
 
-    private static final String TENANT_EDDSA_KEY = "ED";
-    private static final String TENANT_ECDSA_KEY = "EC";
-    private static final Map<String, String> KEY_TYPE_ALIAS_MAPPING = Map.of(
-                    TENANT_ECDSA_KEY, "_ec",
-                    TENANT_EDDSA_KEY, "_ed");
+    private static final String TENANT_EDDSA_KEY_SUFFIX = "_ed";
+    private static final String TENANT_ECDSA_KEY_SUFFIX = "_ec";
 
     /**
      * KeyStore name will be here.
@@ -62,8 +58,8 @@ public class KeyStoreUtil {
         Enumeration<String> enums = store.aliases();
         while (enums.hasMoreElements()) {
             String name = enums.nextElement();
-            if (store.isKeyEntry(name) && !name.endsWith(KEY_TYPE_ALIAS_MAPPING.get(TENANT_ECDSA_KEY))
-                                       && !name.endsWith(KEY_TYPE_ALIAS_MAPPING.get(TENANT_EDDSA_KEY))) {
+            if (store.isKeyEntry(name) && !name.endsWith(TENANT_EDDSA_KEY_SUFFIX)
+                                       && !name.endsWith(TENANT_ECDSA_KEY_SUFFIX)) {
                 alias = name;
                 break;
             }
@@ -266,31 +262,39 @@ public class KeyStoreUtil {
     }
 
     /**
-     * Returns the alias used to identify the key pair based on the tenant.
+     * Returns the alias used to identify the EDDSA key pair based on the tenant.
      *
      * @param tenantDomain     Tenant domain name.
-     * @param keyType          Key type of the key pair.
-     * @return                 The tenant specific EC key alias.
-     * @throws CarbonException Carbon Exception for empty values and unsupported key types.
+     * @return                 The tenant specific EDDSA key alias.
+     * @throws CarbonException Carbon Exception for empty values.
      */
-    public static String getTenantKeyAlias(String tenantDomain, String keyType) throws CarbonException {
+    public static String getTenantEdKeyAlias(String tenantDomain) throws CarbonException {
 
         if (StringUtils.isBlank(tenantDomain)) {
             throw new CarbonException("Tenant domain must not be empty.");
+        } else if (SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
+            return  getServerPrimaryKeyAlias() + TENANT_EDDSA_KEY_SUFFIX;
+        } else {
+            return tenantDomain + TENANT_EDDSA_KEY_SUFFIX;
         }
-        if (StringUtils.isBlank(keyType)) {
-            throw new CarbonException("Key type must not be empty.");
-        }
+    }
 
-        String aliasKeySuffix = KEY_TYPE_ALIAS_MAPPING.get(keyType);
-        if (aliasKeySuffix == null) {
-            throw new CarbonException("Unsupported key type: " + keyType);
-        }
-        String baseAlias = SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)
-                ? getServerPrimaryKeyAlias()
-                : tenantDomain;
+    /**
+     * Returns the alias used to identify the ECDSA key pair based on the tenant.
+     *
+     * @param tenantDomain     Tenant domain name.
+     * @return                 The tenant specific ECDSA key alias.
+     * @throws CarbonException Carbon Exception for empty values.
+     */
+    public static String getTenantECKeyAlias(String tenantDomain) throws CarbonException {
 
-        return baseAlias + aliasKeySuffix;
+        if (StringUtils.isBlank(tenantDomain)) {
+            throw new CarbonException("Tenant domain must not be empty.");
+        } else if (SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
+            return  getServerPrimaryKeyAlias() + TENANT_ECDSA_KEY_SUFFIX;
+        } else {
+            return tenantDomain + TENANT_ECDSA_KEY_SUFFIX;
+        }
     }
 
     private static String getServerPrimaryKeyAlias() throws CarbonException {
