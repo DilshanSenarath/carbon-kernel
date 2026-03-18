@@ -40,9 +40,12 @@ import java.util.Iterator;
 
 import javax.xml.namespace.QName;
 
+import static org.wso2.carbon.utils.multitenancy.MultitenantConstants.SUPER_TENANT_DOMAIN_NAME;
+
 public class KeyStoreUtil {
 
     private static final String TENANT_EDDSA_KEY_SUFFIX = "_ed";
+    private static final String TENANT_ECDSA_KEY_SUFFIX = "_ec";
 
     /**
      * KeyStore name will be here.
@@ -55,7 +58,8 @@ public class KeyStoreUtil {
         Enumeration<String> enums = store.aliases();
         while (enums.hasMoreElements()) {
             String name = enums.nextElement();
-            if (store.isKeyEntry(name) && !name.endsWith(TENANT_EDDSA_KEY_SUFFIX)) {
+            if (store.isKeyEntry(name) && !name.endsWith(TENANT_EDDSA_KEY_SUFFIX)
+                                       && !name.endsWith(TENANT_ECDSA_KEY_SUFFIX)) {
                 alias = name;
                 break;
             }
@@ -258,17 +262,50 @@ public class KeyStoreUtil {
     }
 
     /**
-     * Get tenant EdDSA Key Alias
+     * Returns the alias used to identify the EDDSA key pair based on the tenant.
      *
-     * @return Tenant EdDSA Key Alias
-     * @throws CarbonException Exception Carbon Exception for tenants other than tenant -1234
+     * @param tenantDomain     Tenant domain name.
+     * @return                 The tenant specific EDDSA key alias.
+     * @throws CarbonException Carbon Exception for empty values.
      */
     public static String getTenantEdKeyAlias(String tenantDomain) throws CarbonException {
 
         if (StringUtils.isBlank(tenantDomain)) {
             throw new CarbonException("Tenant domain must not be empty.");
+        } else if (SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
+            return  getServerPrimaryKeyAlias() + TENANT_EDDSA_KEY_SUFFIX;
         } else {
-            return tenantDomain +  TENANT_EDDSA_KEY_SUFFIX;
+            return tenantDomain + TENANT_EDDSA_KEY_SUFFIX;
         }
+    }
+
+    /**
+     * Returns the alias used to identify the ECDSA key pair based on the tenant.
+     *
+     * @param tenantDomain     Tenant domain name.
+     * @return                 The tenant specific ECDSA key alias.
+     * @throws CarbonException Carbon Exception for empty values.
+     */
+    public static String getTenantECKeyAlias(String tenantDomain) throws CarbonException {
+
+        if (StringUtils.isBlank(tenantDomain)) {
+            throw new CarbonException("Tenant domain must not be empty.");
+        } else if (SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
+            return  getServerPrimaryKeyAlias() + TENANT_ECDSA_KEY_SUFFIX;
+        } else {
+            return tenantDomain + TENANT_ECDSA_KEY_SUFFIX;
+        }
+    }
+
+    private static String getServerPrimaryKeyAlias() throws CarbonException {
+
+        String primaryKeyAlias = CarbonCoreDataHolder.getInstance()
+                .getServerConfigurationService()
+                .getFirstProperty(RegistryResources.SecurityManagement.SERVER_PRIMARY_KEYSTORE_KEY_ALIAS);
+
+        if (StringUtils.isBlank(primaryKeyAlias)) {
+            throw new CarbonException("Server primary keystore key alias is not configured.");
+        }
+        return primaryKeyAlias;
     }
 }
