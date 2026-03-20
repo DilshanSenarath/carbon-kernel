@@ -11263,8 +11263,8 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
                 if (((AbstractUserStoreManager) secManager).isUniqueUserIdEnabled()) {
                     UniqueIDPaginatedSearchResult users = ((AbstractUserStoreManager) secManager).doGetUserListWithID(condition,
                             profileName, limit, offset, sortBy, sortOrder);
-                    addUsersToUserIdCache(users.getUsers());
-                    addUsersToUserNameCache(users.getUsers());
+                    addUsersToUserIdCacheOnRead(users.getUsers());
+                    addUsersToUserNameCacheOnRead(users.getUsers());
                     filteredUsers = users.getUsers().stream().map(User::getUsername).toArray(String[]::new);
                 } else {
                     PaginatedSearchResult users = ((AbstractUserStoreManager) secManager).doGetUserList(condition,
@@ -13910,8 +13910,8 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
                         log.debug("User is not available in cache or database.");
                         return null;
                     }
-                    addToUserIDCache(userID, userName, userStore);
-                    addToUserNameCache(userID, userName, userStore);
+                    addToUserIDCacheOnRead(userID, userName, userStore);
+                    addToUserNameCacheOnRead(userID, userName, userStore);
                     return userID;
                 }
 
@@ -13920,8 +13920,8 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
                         userStore.getDomainName(), null);
                 if (claims != null && claims.size() == 1) {
                     userID = claims.get(USER_ID_CLAIM_URI);
-                    addToUserIDCache(userID, userName, userStore);
-                    addToUserNameCache(userID, userName, userStore);
+                    addToUserIDCacheOnRead(userID, userName, userStore);
+                    addToUserNameCacheOnRead(userID, userName, userStore);
                     return userID;
                 }
             }
@@ -14014,8 +14014,8 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
                 }
                 return null;
             }
-            addToUserNameCache(userID, userName, userStore);
-            addToUserIDCache(userID, userName, userStore);
+            addToUserNameCacheOnRead(userID, userName, userStore);
+            addToUserIDCacheOnRead(userID, userName, userStore);
         }
         return UserCoreUtil.addDomainToName(userName, userStore.getDomainName());
     }
@@ -14056,11 +14056,25 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
     private void addToUserIDCache(String userID, String userName, UserStore userStore) {
 
         UserIdResolverCache.getInstance()
+                .addToCache(UserCoreUtil.addDomainToName(userName, userStore.getDomainName()), userID,
+                        RESOLVE_USER_ID_FROM_USER_NAME_CACHE_NAME, tenantId);
+    }
+
+    private void addToUserIDCacheOnRead(String userID, String userName, UserStore userStore) {
+
+        UserIdResolverCache.getInstance()
                 .addToCacheOnRead(UserCoreUtil.addDomainToName(userName, userStore.getDomainName()), userID,
                         RESOLVE_USER_ID_FROM_USER_NAME_CACHE_NAME, tenantId);
     }
 
     private void addToUserNameCache(String userID, String userName, UserStore userStore) {
+
+        UserIdResolverCache.getInstance()
+                .addToCache(userID, UserCoreUtil.addDomainToName(userName, userStore.getDomainName()),
+                        RESOLVE_USER_NAME_FROM_USER_ID_CACHE_NAME, tenantId);
+    }
+
+    private void addToUserNameCacheOnRead(String userID, String userName, UserStore userStore) {
 
         UserIdResolverCache.getInstance()
                 .addToCacheOnRead(userID, UserCoreUtil.addDomainToName(userName, userStore.getDomainName()),
@@ -14084,6 +14098,16 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
 
         UserIdResolverCache userIdResolverCacheInstance = UserIdResolverCache.getInstance();
         for (User user : userList) {
+            userIdResolverCacheInstance.addToCache(
+                    UserCoreUtil.addDomainToName(user.getUsername(), user.getUserStoreDomain()), user.getUserID(),
+                    RESOLVE_USER_ID_FROM_USER_NAME_CACHE_NAME, tenantId);
+        }
+    }
+
+    private void addUsersToUserIdCacheOnRead(List<User> userList) {
+
+        UserIdResolverCache userIdResolverCacheInstance = UserIdResolverCache.getInstance();
+        for (User user : userList) {
             userIdResolverCacheInstance.addToCacheOnRead(
                     UserCoreUtil.addDomainToName(user.getUsername(), user.getUserStoreDomain()), user.getUserID(),
                     RESOLVE_USER_ID_FROM_USER_NAME_CACHE_NAME, tenantId);
@@ -14091,6 +14115,16 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
     }
 
     private void addUsersToUserNameCache(List<User> userList) {
+
+        UserIdResolverCache userIdResolverCacheInstance = UserIdResolverCache.getInstance();
+        for (User user : userList) {
+            userIdResolverCacheInstance.addToCache(
+                    user.getUserID(), UserCoreUtil.addDomainToName(user.getUsername(), user.getUserStoreDomain()),
+                    RESOLVE_USER_NAME_FROM_USER_ID_CACHE_NAME, tenantId);
+        }
+    }
+
+    private void addUsersToUserNameCacheOnRead(List<User> userList) {
 
         UserIdResolverCache userIdResolverCacheInstance = UserIdResolverCache.getInstance();
         for (User user : userList) {
@@ -17210,8 +17244,8 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
                 if (isUniqueUserIdEnabled(secManager)) {
                     UniqueIDPaginatedSearchResult users = ((AbstractUserStoreManager) secManager)
                             .doGetUserListWithID(condition, profileName, limit, offset, sortBy, sortOrder);
-                    addUsersToUserIdCache(users.getUsers());
-                    addUsersToUserNameCache(users.getUsers());
+                    addUsersToUserIdCacheOnRead(users.getUsers());
+                    addUsersToUserNameCacheOnRead(users.getUsers());
                     filteredUsers = users.getUsers();
                 } else {
                     PaginatedSearchResult users = ((AbstractUserStoreManager) secManager)
@@ -18468,8 +18502,8 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
             UniqueIDPaginatedSearchResult users = this.doGetUserListWithID(condition,
                     UserCoreConstants.PRIMARY_DEFAULT_DOMAIN_NAME, resolveUserListLimit(limit), offset,
                     sortBy, sortOrder);
-            addUsersToUserIdCache(users.getUsers());
-            addUsersToUserNameCache(users.getUsers());
+            addUsersToUserIdCacheOnRead(users.getUsers());
+            addUsersToUserNameCacheOnRead(users.getUsers());
             filteredUsers = users.getUsers();
         } else {
             PaginatedSearchResult users = this.doGetUserList(condition, UserCoreConstants.PRIMARY_DEFAULT_DOMAIN_NAME,

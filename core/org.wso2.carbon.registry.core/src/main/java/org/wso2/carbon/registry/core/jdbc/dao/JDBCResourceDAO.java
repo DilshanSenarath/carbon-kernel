@@ -2211,6 +2211,7 @@ public class JDBCResourceDAO implements ResourceDAO {
      *
      */
     public String getPathFromIdOnRead(int pathId) throws RegistryException {
+        
         try {
             return JDBCPathCache.getPathCache()
                     .getPathOnRead(JDBCDatabaseTransaction.getConnection(), pathId);

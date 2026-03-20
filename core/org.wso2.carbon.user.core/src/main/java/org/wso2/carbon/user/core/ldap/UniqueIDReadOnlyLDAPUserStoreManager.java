@@ -1529,8 +1529,8 @@ public class UniqueIDReadOnlyLDAPUserStoreManager extends ReadOnlyLDAPUserStoreM
                         if (StringUtils.equals(property,
                                 realmConfig.getUserStoreProperty(LDAPConstants.USER_NAME_ATTRIBUTE))) {
                             putToUserCache(value, new LdapName(sr.getNameInNamespace()));
-                            addToUserNameCache(propertyValue, value, getMyDomainName());
-                            addToUserIDCache(propertyValue, value, getMyDomainName());
+                            addToUserNameCacheOnRead(propertyValue, value, getMyDomainName());
+                            addToUserIDCacheOnRead(propertyValue, value, getMyDomainName());
                         }
                     }
                 }

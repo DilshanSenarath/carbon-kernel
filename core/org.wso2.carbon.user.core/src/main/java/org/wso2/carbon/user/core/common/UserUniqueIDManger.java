@@ -106,8 +106,8 @@ public class UserUniqueIDManger {
                 return null;
             }
             userName = usernames[0];
-            addToUserNameCache(uniqueId, userName);
-            addToUserIDCache(uniqueId, userName);
+            addToUserNameCacheOnRead(uniqueId, userName);
+            addToUserIDCacheOnRead(uniqueId, userName);
         }
 
         User user = new User();

@@ -649,7 +649,7 @@ public class JDBCTenantManager implements TenantManager {
             }
             tenantDomainNameValidation(tenantDomain);
             tenantDomainCache.addToCacheOnRead(tenantIdKey, new TenantDomainEntry(tenantDomain));
-            tenantIdCache.addToCache(new TenantDomainKey(tenantDomain), new TenantIdEntry(tenantId));
+            tenantIdCache.addToCacheOnRead(new TenantDomainKey(tenantDomain), new TenantIdEntry(tenantId));
         }
 
         if (tenantDomain != null) {
@@ -751,7 +751,7 @@ public class JDBCTenantManager implements TenantManager {
                 }
                 tenantDomainNameValidation(tenantDomain);
                 tenantIdCache.addToCacheOnRead(tenantDomainKey, new TenantIdEntry(tenantId));
-                tenantDomainCache.addToCache(new TenantIdKey(tenantId), new TenantDomainEntry(tenantDomain));
+                tenantDomainCache.addToCacheOnRead(new TenantIdKey(tenantId), new TenantDomainEntry(tenantDomain));
             }
         } catch (SQLException e) {
             DatabaseUtil.rollBack(dbConnection);

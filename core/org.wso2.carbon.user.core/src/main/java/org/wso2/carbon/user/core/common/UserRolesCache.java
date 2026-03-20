@@ -18,7 +18,13 @@
 */
 package org.wso2.carbon.user.core.common;
 
-import org.apache.commons.lang.StringUtils;
+import java.util.concurrent.TimeUnit;
+
+import javax.cache.Cache;
+import javax.cache.CacheConfiguration;
+import javax.cache.CacheManager;
+import javax.cache.Caching;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.caching.impl.CachingConstants;
@@ -28,12 +34,6 @@ import org.wso2.carbon.user.core.UserCoreConstants;
 import org.wso2.carbon.user.core.UserStoreManager;
 import org.wso2.carbon.user.core.internal.UserStoreMgtDSComponent;
 import org.wso2.carbon.user.core.util.UserCoreUtil;
-
-import javax.cache.Cache;
-import javax.cache.CacheConfiguration;
-import javax.cache.CacheManager;
-import javax.cache.Caching;
-import java.util.concurrent.TimeUnit;
 
 public class UserRolesCache {
 
@@ -135,6 +135,7 @@ public class UserRolesCache {
      *
      */
     public void addToCacheOnRead(String serverId, int tenantId, String userName, String[] userRoleList) {
+        
         try {
             PrivilegedCarbonContext.startTenantFlow();
             PrivilegedCarbonContext carbonContext = PrivilegedCarbonContext.getThreadLocalCarbonContext();
