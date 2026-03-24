@@ -38,6 +38,7 @@ public class RequestNormalizationValve extends ValveBase {
 		if (uri != null && uri.length() > 1 && uri.endsWith("/") && request.getQueryString() == null) {
 			uri = uri.replaceAll("/+$", "");
 			response.sendRedirect(uri);
+			return;
 		}
 
 		// Invoking other valves.
