@@ -40,6 +40,9 @@ public class RequestNormalizationValve extends ValveBase {
 			response.sendRedirect(uri);
 		}
 
-		getNext().invoke(request, response);
+		// Invoking other valves.
+		if (getNext() != null) {
+			getNext().invoke(request, response);
+		}
 	}
 }
