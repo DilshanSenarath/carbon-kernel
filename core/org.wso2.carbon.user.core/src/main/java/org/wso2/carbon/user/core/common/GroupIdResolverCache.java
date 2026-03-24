@@ -86,6 +86,26 @@ public class GroupIdResolverCache {
         }
     }
 
+    public void addToCacheOnRead(String key, String entry, String cacheName, int tenantId) {
+
+        if (validateAddToCacheRequest(key, entry, cacheName)) {
+            return;
+        }
+        try {
+            startTenantFlow(tenantId);
+            Cache<String, String> cache = getGroupIdResolverCache(cacheName);
+            if (cache != null && !cache.containsKey(key)) {
+                cache.putOnRead(key, entry);
+                if (log.isDebugEnabled()) {
+                    log.debug(String.format("Cache: %s which is under %s, added the entry: %s for the key: " +
+                            "%s successfully", cacheName, GROUP_ID_RESOLVER_CACHE_MANAGER, entry, key));
+                }
+            }
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+    }
+
     /**
      * Retrieves a cache entry.
      *

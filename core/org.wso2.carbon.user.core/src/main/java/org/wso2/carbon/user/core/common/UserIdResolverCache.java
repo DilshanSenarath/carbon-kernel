@@ -83,6 +83,36 @@ public class UserIdResolverCache {
     }
 
     /**
+     * Add a cache entry during a READ operation.
+     * <p>
+     * This populates the cache only if the key does not already have a value.
+     * If a value already exists, the cache is left unchanged, which avoids
+     * unnecessary cache invalidation broadcasts in clustered environments.
+     *
+     * @param key       Key which cache entry is indexed.
+     * @param entry     Actual object where cache entry is placed.
+     * @param cacheName Name of the cache.
+     * @param tenantId  Tenant ID.
+     */
+    public void addToCacheOnRead(String key, String entry, String cacheName, int tenantId) {
+
+        if (validateAddToCacheRequest(key, entry, cacheName)) return;
+        try {
+            startTenantFlow(tenantId);
+            Cache<String, String> cache = UserIdResolverCache(cacheName);
+            if (cache != null && !cache.containsKey(key)) {
+                cache.putOnRead(key, entry);
+                if (log.isDebugEnabled()) {
+                    log.debug("Cache: " + cacheName + " which is under " + USER_ID_RESOLVER_CACHE_MANAGER + "," +
+                            "added the entry: " + entry + " for the key: " + key + " successfully");
+                }
+            }
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+    }
+
+    /**
      * Retrieves a cache entry.
      *
      * @param key       CacheKey.

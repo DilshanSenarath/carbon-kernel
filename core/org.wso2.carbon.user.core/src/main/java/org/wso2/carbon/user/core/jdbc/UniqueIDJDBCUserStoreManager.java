@@ -4029,8 +4029,8 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
         String userID = rs.getString(1);
         String userName = rs.getString(2);
         if (StringUtils.isNotBlank(userID) && StringUtils.isNotBlank(userName)) {
-            addToUserIDCache(userID, userName, getMyDomainName());
-            addToUserNameCache(userID, userName, getMyDomainName());
+            addToUserIDCacheOnRead(userID, userName, getMyDomainName());
+            addToUserNameCacheOnRead(userID, userName, getMyDomainName());
         }
 
         User user = getUser(userID, userName);
@@ -4043,8 +4043,8 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
         String userID = rs.getString(1);
         String userName = rs.getString(2);
         if (StringUtils.isNotBlank(userID) && StringUtils.isNotBlank(userName)) {
-            addToUserIDCache(userID, userName, getMyDomainName());
-            addToUserNameCache(userID, userName, getMyDomainName());
+            addToUserIDCacheOnRead(userID, userName, getMyDomainName());
+            addToUserNameCacheOnRead(userID, userName, getMyDomainName());
         }
         userName = UserCoreUtil.addDomainToName(userName, getMyDomainName());
         usernameList.add(userName);

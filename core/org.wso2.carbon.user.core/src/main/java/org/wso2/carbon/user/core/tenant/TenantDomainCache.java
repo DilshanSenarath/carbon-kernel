@@ -22,14 +22,14 @@ package org.wso2.carbon.user.core.tenant;
  * Date: Oct 1, 2010 Time: 2:36:37 PM
  */
 
+import javax.cache.Cache;
+import javax.cache.CacheManager;
+import javax.cache.Caching;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
-
-import javax.cache.Cache;
-import javax.cache.CacheManager;
-import javax.cache.Caching;
 
 /**
  * This is the tenant cache.
@@ -77,6 +77,38 @@ class TenantDomainCache {
             } else {
                 if (log.isDebugEnabled()) {
                     log.debug("Error while getting the cache : " + TENANT_DOMAIN_CACHE + " which is under " + TENANT_DOMAIN_CACHE_MANAGER);
+                }
+            }
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+    }
+
+    /**
+     * Add a cache entry during a READ operation.
+     * <p>
+     * This populates the cache only if the key does not already have a value.
+     * If a value already exists, the cache is left unchanged, which avoids
+     * unnecessary cache invalidation broadcasts in clustered environments.
+     * <p>
+     * Add a cache entry.
+     *
+     * @param key   Key which cache entry is indexed.
+     * @param entry Actual object where cache entry is placed.
+     */
+    public void addToCacheOnRead(TenantIdKey key, TenantDomainEntry entry) {
+
+        try {
+            startSuperTenantFlow();
+            Cache<TenantIdKey, TenantDomainEntry> cache = getTenantDomainCache();
+            if (cache != null) {
+                cache.putOnRead(key, entry);
+                log.debug(TENANT_DOMAIN_CACHE + " which is under " + TENANT_DOMAIN_CACHE_MANAGER + 
+                ", added the entry : " + entry + " for the key : " + key + " successfully");
+            } else {
+                if (log.isDebugEnabled()) {
+                    log.debug("Error while getting the cache : " + TENANT_DOMAIN_CACHE + 
+                    " which is under " + TENANT_DOMAIN_CACHE_MANAGER);
                 }
             }
         } finally {

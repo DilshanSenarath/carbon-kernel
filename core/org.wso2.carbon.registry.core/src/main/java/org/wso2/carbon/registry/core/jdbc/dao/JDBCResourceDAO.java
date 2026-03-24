@@ -72,7 +72,7 @@ public class JDBCResourceDAO implements ResourceDAO {
         try {
             // step1: need to check whether it is a resource or collection while retrieving path id
             JDBCPathCache pathCache = JDBCPathCache.getPathCache();
-            int pathID = pathCache.getPathID(conn, path);
+            int pathID = pathCache.getPathIDOnRead(conn, path);
             boolean isCollection = true;
             if (pathID == -1) {
                 isCollection = false;
@@ -86,7 +86,7 @@ public class JDBCResourceDAO implements ResourceDAO {
                 String parentPath = RegistryUtils.getParentPath(path);
                 resourceName = RegistryUtils.getResourceName(path);
 
-                pathID = pathCache.getPathID(conn, parentPath);
+                pathID = pathCache.getPathIDOnRead(conn, parentPath);
             }
 
             if (pathID != -1) {
@@ -118,7 +118,7 @@ public class JDBCResourceDAO implements ResourceDAO {
             int pathID;
             String resourceName = null;
             if (isCollection) {
-                pathID = JDBCPathCache.getPathCache().getPathID(conn, path);
+                pathID = JDBCPathCache.getPathCache().getPathIDOnRead(conn, path);
             } else {
                 // we have to re-get the path id for the parent path..
                 String parentPath;
@@ -129,7 +129,7 @@ public class JDBCResourceDAO implements ResourceDAO {
                 }
                 resourceName = RegistryUtils.getResourceName(path);
 
-                pathID = JDBCPathCache.getPathCache().getPathID(conn, parentPath);
+                pathID = JDBCPathCache.getPathCache().getPathIDOnRead(conn, parentPath);
             }
 
             if (pathID != -1) {
@@ -2202,6 +2202,26 @@ public class JDBCResourceDAO implements ResourceDAO {
         }
     }
 
+    /**
+     * Add a cache entry during a READ operation.
+     * <p>
+     * This populates the cache only if the key does not already have a value.
+     * If a value already exists, the cache is left unchanged, which avoids
+     * unnecessary cache invalidation broadcasts in clustered environments.
+     *
+     */
+    public String getPathFromIdOnRead(int pathId) throws RegistryException {
+        
+        try {
+            return JDBCPathCache.getPathCache()
+                    .getPathOnRead(JDBCDatabaseTransaction.getConnection(), pathId);
+        } catch (SQLException e) {
+            String msg = "Failed to get the path for the path id " + pathId + ". " + e.getMessage();
+            log.error(msg, e);
+            throw new RegistryException(msg, e);
+        }
+    }
+
     public String getPath(long version) throws RegistryException {
         ResourceDO resourceDO = getResourceDO(version);
         if (resourceDO == null) {
@@ -2212,7 +2232,7 @@ public class JDBCResourceDAO implements ResourceDAO {
 
     public String getPath(int pathId, String resourceName, boolean checkExistence)
             throws RegistryException {
-        String pathCollection = getPathFromId(pathId);
+        String pathCollection = getPathFromIdOnRead(pathId);
         if (pathCollection == null) {
             return null;
         }

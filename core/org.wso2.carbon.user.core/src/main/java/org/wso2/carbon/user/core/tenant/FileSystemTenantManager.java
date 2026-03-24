@@ -142,7 +142,7 @@ public class FileSystemTenantManager extends CommonHybridLDAPTenantManager {
 
             tenant.setRealmConfig(realmConfig);
             tenant.setAdminName(realmConfig.getAdminUserName());
-            tenantCacheManager.addToCache(new TenantIdKey(tenantId), new TenantCacheEntry<Tenant>(tenant));
+            tenantCacheManager.addToCacheOnRead(new TenantIdKey(tenantId), new TenantCacheEntry<Tenant>(tenant));
 
         } catch (CarbonException e) {
             String errorMessage = "Error occurred while getting tenant from tenant id : " + tenant;

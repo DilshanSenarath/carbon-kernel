@@ -152,6 +152,77 @@ public class UserUniqueIDDomainResolver {
     }
 
     /**
+     * Get the domain for the given user id.
+     * <p>
+     * Add a cache entry during a READ operation.
+     * <p>
+     * This populates the cache only if the key does not already have a value.
+     * If a value already exists, the cache is left unchanged, which avoids
+     * unnecessary cache invalidation broadcasts in clustered environments.
+     *
+     * @param userId Unique user id of the user.
+     * @return Domain related to this user. Null if no domain name recorded.
+     * @throws UserStoreException If error occurred.
+     */
+    public String getDomainForUserIdOnRead(String userId, int tenantId) throws UserStoreException {
+
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext carbonContext = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+            carbonContext.setTenantId(tenantId, true);
+            CacheManager cacheManager = Caching.getCacheManagerFactory()
+                    .getCacheManager(UNIQUE_ID_DOMAIN_RESOLVER_CACHE_MANGER_NAME);
+            Cache<String, String> uniqueIdDomainCache = cacheManager.getCache(UNIQUE_ID_DOMAIN_RESOLVER_CACHE_NAME);
+
+            if (StringUtils.isEmpty(userId)) {
+                throw new UserStoreException("User Id cannot be empty or null.");
+            }
+
+            // Read the cache first.
+            String domainName = uniqueIdDomainCache.get(userId);
+
+            if (StringUtils.isBlank(domainName)) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Cache miss for user id: " + userId + " searching from the database.");
+                }
+
+                // Read the domain name from the Database;
+                domainName = getDomainFromDB(userId, tenantId);
+
+                // Update the cache.
+                if (StringUtils.isNotBlank(domainName)) {
+                    uniqueIdDomainCache.putOnRead(userId, domainName);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Domain with name: " + domainName + " retrieved from the database.");
+                    }
+                }
+            }
+            if (StringUtils.isNotBlank(domainName) &&
+                    !UserCoreConstants.PRIMARY_DEFAULT_DOMAIN_NAME.equals(domainName)) {
+                RealmService realmService = UserCoreUtil.getRealmService();
+                UserStoreManager userStoreManager = null;
+                if (realmService != null) {
+                    userStoreManager = ((AbstractUserStoreManager) realmService.getTenantUserRealm(tenantId)
+                            .getUserStoreManager()).getSecondaryUserStoreManager(domainName);
+                }
+                if (userStoreManager == null) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("Entry is outdated. Clearing cache and the database entries.");
+                    }
+                    deleteDomainFromDB(domainName, userId, tenantId);
+                    clearUserIDResolverCache(userId, tenantId);
+                    domainName = null;
+                }
+            }
+            return domainName;
+        } catch (org.wso2.carbon.user.api.UserStoreException e) {
+            throw new UserStoreException("Tenant user realm  cannot be resolved for tenantId: " + tenantId, e);
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+    }
+
+    /**
      * Set the domain for the user id. This will update the domain name if there is already a record available.
      *
      * @param userId     Unique user id of the user.
