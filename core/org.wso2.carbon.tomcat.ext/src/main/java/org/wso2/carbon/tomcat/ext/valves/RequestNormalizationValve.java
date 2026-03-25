@@ -25,19 +25,23 @@ import java.io.IOException;
 import javax.servlet.ServletException;
 
 /**
- * Valve that normalizes request URIs by redirecting to remove trailing slashes.
- * Only redirects paths longer than "/" that end with trailing slashes and have no query string.
+ * Valve that normalizes request URIs by redirecting GET requests to remove trailing slashes.
+ * Only redirects paths longer than "/" that end with trailing slashes. Query strings are preserved.
+ * Non-GET requests are passed through unchanged to avoid dropping the request body.
  */
 public class RequestNormalizationValve extends ValveBase {
 
 	@Override
 	public void invoke(Request request, Response response) throws IOException, ServletException {
 
-		String uri = request.getDecodedRequestURI();
+		String decodedUri = request.getDecodedRequestURI();
 
-		if (uri != null && uri.length() > 1 && uri.endsWith("/") && request.getQueryString() == null) {
-			uri = uri.replaceAll("/+$", "");
-			response.sendRedirect(uri);
+		if ("GET".equalsIgnoreCase(request.getMethod()) && decodedUri != null && decodedUri.length() > 1
+				&& decodedUri.endsWith("/")) {
+			String rawUri = request.getRequestURI().replaceAll("/+$", "");
+			String queryString = request.getQueryString();
+			String location = queryString != null ? rawUri + "?" + queryString : rawUri;
+			response.sendRedirect(location);
 			return;
 		}
 
