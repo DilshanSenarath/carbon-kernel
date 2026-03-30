@@ -350,13 +350,24 @@ public class UniqueIDReadWriteLDAPUserStoreManager extends UniqueIDReadOnlyLDAPU
             }
             dirContext.bind(compoundName, null, basicAttributes);
         } catch (NamingException e) {
-            String errorMessage =
-                    "Cannot access the directory context or " + "user already exists in the system for user :"
-                            + userName;
-            if (log.isDebugEnabled()) {
-                log.debug(errorMessage, e);
+            String errorMessage = "Cannot access the directory context or " + "user already exists in the system for user :"
+                    + userName;
+
+            if (e instanceof NameAlreadyBoundException) {
+                // If concurrent requests with same username bypass the existing user validation check, it can throw an
+                // exception regarding unique key violation. It should be caught and rethrown as a client exception.
+                if (log.isDebugEnabled()) {
+                    log.debug(errorMessage, e);
+                }
+
+                throw new UserStoreClientException(
+                        UserCoreErrorConstants.ErrorMessages.ERROR_CODE_USER_ALREADY_EXISTS.getCode() + " : " +
+                                UserCoreErrorConstants.ErrorMessages.ERROR_CODE_USER_ALREADY_EXISTS.getMessage(),
+                        UserCoreErrorConstants.ErrorMessages.ERROR_CODE_USER_ALREADY_EXISTS.getCode());
+            } else {
+                log.error("Failed to persist user: " + userName + ". Error: " + e.getMessage());
+                throw new UserStoreException(errorMessage, e);
             }
-            throw new UserStoreException(errorMessage, e);
         } finally {
             JNDIUtil.closeContext(dirContext);
             // Clearing password byte array
