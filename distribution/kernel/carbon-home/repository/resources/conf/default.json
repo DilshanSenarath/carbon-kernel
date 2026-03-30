@@ -86,6 +86,7 @@
   "transport.https.sslHostConfig.properties.truststoreFile": "${carbon.home}/repository/resources/security/$ref{truststore.file_name}",
   "transport.https.sslHostConfig.properties.truststorePassword": "$ref{truststore.password}",
   "transport.https.sslHostConfig.properties.truststoreType": "$ref{truststore.type}",
+  "transport.https.sslHostConfig.properties.ciphers": "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,TLS_DHE_RSA_WITH_AES_256_GCM_SHA384,TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256,TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384,TLS_CHACHA20_POLY1305_SHA256",
   "transport.https.sslHostConfig.certificate.properties.certificateKeystoreFile": "${carbon.home}/repository/resources/security/$ref{keystore.tls.file_name}",
   "transport.https.sslHostConfig.certificate.properties.certificateKeystorePassword": "$ref{keystore.tls.password}",
   "transport.https.sslHostConfig.certificate.properties.certificateKeystoreType": "$ref{keystore.tls.type}",
