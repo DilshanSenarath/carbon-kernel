@@ -4422,10 +4422,6 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
                 limit = initialOffset + 1;
             } else if (ORACLE.equalsIgnoreCase(type)) {
                 limit = offset + limit;
-            } else if (MSSQL.equalsIgnoreCase(type)) {
-                int initialOffset = offset;
-                offset = limit + offset;
-                limit = initialOffset + 1;
             }
 
             SqlBuilder sqlBuilder = getQueryString(isGroupFiltering, isUsernameFiltering, isClaimFiltering,
@@ -4537,12 +4533,6 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
                         "UM_USER_NAME) AS rn, p.*  FROM (SELECT DISTINCT UM_USER_NAME  FROM UM_ROLE R INNER JOIN " +
                         "UM_USER_ROLE UR ON R.UM_ID = UR.UM_ROLE_ID" + roleUserJoinClause + "UM_USER U " +
                         "ON UR.UM_USER_ID =U.UM_ID INNER JOIN UM_USER_ATTRIBUTE UA ON U.UM_ID = UA.UM_USER_ID");
-            } else if (MSSQL.equals(dbType)) {
-                sqlStatement = new StringBuilder("SELECT UM_USER_NAME FROM (SELECT UM_USER_NAME, ROW_NUMBER() OVER " +
-                        "(ORDER BY UM_USER_NAME) AS RowNum FROM (SELECT DISTINCT UM_USER_NAME FROM UM_ROLE R INNER " +
-                        "JOIN UM_USER_ROLE UR ON R" +
-                        ".UM_ID = UR.UM_ROLE_ID" + roleUserJoinClause + "UM_USER U ON UR.UM_USER_ID =U.UM_ID INNER JOIN " +
-                        "UM_USER_ATTRIBUTE UA ON U.UM_ID = UA.UM_USER_ID");
             } else if (ORACLE.equals(dbType)) {
                 sqlStatement = new StringBuilder("SELECT UM_USER_NAME FROM (SELECT UM_USER_NAME, rownum AS rnum FROM " +
                         "(SELECT  UM_USER_NAME FROM UM_ROLE R INNER JOIN UM_USER_ROLE UR ON R.UM_ID = UR.UM_ROLE_ID" +
@@ -4573,11 +4563,6 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
                         "UM_USER_NAME) AS rn, p.*  FROM (SELECT DISTINCT UM_USER_NAME  FROM UM_ROLE R INNER JOIN " +
                         "UM_USER_ROLE UR ON R.UM_ID = UR.UM_ROLE_ID" + roleUserJoinClause + "UM_USER U " +
                         "ON UR.UM_USER_ID =U.UM_ID ");
-            } else if (MSSQL.equals(dbType)) {
-                sqlStatement = new StringBuilder("SELECT UM_USER_NAME FROM (SELECT UM_USER_NAME, ROW_NUMBER() OVER " +
-                        "(ORDER BY UM_USER_NAME) AS RowNum FROM (SELECT DISTINCT UM_USER_NAME FROM UM_ROLE R INNER " +
-                        "JOIN UM_USER_ROLE UR ON R.UM_ID = UR.UM_ROLE_ID" + roleUserJoinClause + "UM_USER U " +
-                        "ON UR.UM_USER_ID =U.UM_ID");
             } else if (ORACLE.equals(dbType)) {
                 sqlStatement = new StringBuilder("SELECT UM_USER_NAME FROM (SELECT UM_USER_NAME, rownum AS rnum FROM " +
                         "(SELECT  UM_USER_NAME FROM UM_ROLE R INNER JOIN UM_USER_ROLE UR ON R.UM_ID = UR.UM_ROLE_ID" +
@@ -4602,10 +4587,6 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
                 sqlStatement = new StringBuilder("SELECT UM_USER_NAME FROM (SELECT ROW_NUMBER() OVER (ORDER BY " +
                         "UM_USER_NAME) AS rn, p.*  FROM (SELECT DISTINCT UM_USER_NAME  FROM  UM_USER U INNER JOIN " +
                         "UM_USER_ATTRIBUTE UA ON U.UM_ID = UA.UM_USER_ID");
-            } else if (MSSQL.equals(dbType)) {
-                sqlStatement = new StringBuilder("SELECT UM_USER_NAME FROM (SELECT UM_USER_NAME, ROW_NUMBER() OVER " +
-                        "(ORDER BY UM_USER_NAME) AS RowNum FROM (SELECT DISTINCT UM_USER_NAME FROM UM_USER U INNER JOIN " +
-                        "UM_USER_ATTRIBUTE UA ON U.UM_ID = UA.UM_USER_ID");
             } else if (ORACLE.equals(dbType)) {
                 sqlStatement = new StringBuilder("SELECT UM_USER_NAME FROM (SELECT UM_USER_NAME, rownum AS rnum FROM " +
                         "(SELECT UM_USER_NAME FROM UM_USER U INNER JOIN UM_USER_ATTRIBUTE UA ON U.UM_ID = " +
@@ -4622,9 +4603,6 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
             if (DB2.equals(dbType)) {
                 sqlStatement = new StringBuilder("SELECT UM_USER_NAME FROM (SELECT ROW_NUMBER() OVER (ORDER BY " +
                         "UM_USER_NAME) AS rn, p.*  FROM (SELECT DISTINCT UM_USER_NAME  FROM UM_USER U");
-            } else if (MSSQL.equals(dbType)) {
-                sqlStatement = new StringBuilder("SELECT UM_USER_NAME FROM (SELECT UM_USER_NAME, ROW_NUMBER() OVER " +
-                        "(ORDER BY UM_USER_NAME) AS RowNum FROM (SELECT DISTINCT UM_USER_NAME FROM UM_USER U");
             } else if (ORACLE.equals(dbType)) {
                 sqlStatement = new StringBuilder("SELECT UM_USER_NAME FROM (SELECT UM_USER_NAME, rownum AS rnum FROM " +
                         "(SELECT UM_USER_NAME FROM UM_USER U");
@@ -4723,24 +4701,8 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
             if (DB2.equals(dbType)) {
                 sqlBuilder.setTail(") AS p) WHERE rn BETWEEN ? AND ?", limit, offset);
             } else if (MSSQL.equals(dbType)) {
-                if (isClaimFiltering && !isGroupFiltering && totalMulitClaimFitlers > 1) {
-                    StringBuilder alias = new StringBuilder(") As Q0");
-                    /*
-                     * x is used to count the number of sub queries.
-                     * (totalMultiClaimFilters * 2) --> totalMultiClaims are multiplied by 2 as 2 sub queries for
-                     * every new claim.
-                     * (totalMultiClaimFilters * 2) - 1 is deducted as there is 1 sub query in the SQL query.
-                     */
-                    int x;
-                    for ( x = 1; x <= (totalMulitClaimFitlers * 2 - 1); x++) {
-                        alias = alias.append(" ) AS Q" + x );
-                    }
-                    String tail = alias.toString().concat(" WHERE Q" + String.valueOf(x-1) + ".RowNum BETWEEN ? AND ?");
-                    // Handle multi attribute filtering without group filtering.
-                    sqlBuilder.setTail(tail, limit, offset);
-                } else {
-                    sqlBuilder.setTail(") AS R) AS P WHERE P.RowNum BETWEEN ? AND ?", limit, offset);
-                }
+                sqlBuilder.setTail(" ORDER BY UM_USER_NAME ASC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY", offset,
+                        limit);
             } else if (ORACLE.equals(dbType)) {
                 sqlBuilder.setTail(" ORDER BY UM_USER_NAME) where rownum <= ?) WHERE  rnum > ?", limit, offset);
             } else {
