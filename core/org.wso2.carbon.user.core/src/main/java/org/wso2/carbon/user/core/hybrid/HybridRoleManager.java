@@ -22,6 +22,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.tomcat.jdbc.pool.DataSourceProxy;
 import org.wso2.carbon.CarbonConstants;
 import org.wso2.carbon.base.ServerConfiguration;
 import org.wso2.carbon.user.api.RealmConfiguration;
@@ -53,6 +54,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 
 import static org.wso2.carbon.user.core.constants.UserCoreDBConstants.CASE_INSENSITIVE_SQL_STATEMENT_PARAMETER_PLACEHOLDER;
@@ -79,6 +81,8 @@ public class HybridRoleManager {
     private static final String CASE_INSENSITIVE_USERNAME = "CaseInsensitiveUsername";
 
     private static final String DB2 = "db2";
+    private static final String POSTGRE_SQL = "PostgreSQL";
+    private static final String POSTGRES_SCHEMA = "postgresSchema";
 
     private static boolean hybridRoleAudienceTableExists = false;
 
@@ -1533,6 +1537,15 @@ public class HybridRoleManager {
             }
             String schemaName = connection.getSchema();
             String catalogName = connection.getCatalog();
+
+            // For PostgreSQL, use the configured schema if available. This handles cases where tables reside in a
+            // non-default schema that differs from the first entry in the database user's search path.
+            if (POSTGRE_SQL.equalsIgnoreCase(connection.getMetaData().getDatabaseProductName())) {
+                String postgresSchema = getPostgresSchema();
+                if (org.apache.commons.lang.StringUtils.isNotBlank(postgresSchema)) {
+                    schemaName = postgresSchema.trim();
+                }
+            }
             try (ResultSet resultSet = metaData.getTables(catalogName, schemaName, tableName, new String[]{"TABLE"})) {
                 if (resultSet.next()) {
                     return true;
@@ -1544,5 +1557,18 @@ public class HybridRoleManager {
             return false;
         }
         return false;
+    }
+
+    private String getPostgresSchema() {
+
+        String customSchema = null;
+        if (!(dataSource instanceof DataSourceProxy)) {
+            return null;
+        }
+        Properties properties = ((DataSourceProxy) dataSource).getDbProperties();
+        if (properties != null) {
+            customSchema = properties.getProperty(POSTGRES_SCHEMA);
+        }
+        return customSchema;
     }
 }
