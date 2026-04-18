@@ -157,7 +157,7 @@ public class JDBCRealmUtil {
         }
         if (!properties.containsKey(JDBCRealmConstants.GET_USER_FILTER_PAGINATED_WITH_ID_MSSQL)) {
             properties.put(JDBCRealmConstants.GET_USER_FILTER_PAGINATED_WITH_ID_MSSQL,
-                    JDBCRealmConstants.GET_USER_FILTER_PAGINATED_WITH_ID_SQL_MSSQL);
+                    JDBCRealmConstants.GET_USER_FILTER_PAGINATED_WITH_USER_ID_SQL_MSSQL);
         }
         if (!properties.containsKey(JDBCRealmConstants.GET_USER_FILTER_PAGINATED_COUNT)) {
             properties.put(JDBCRealmConstants.GET_USER_FILTER_PAGINATED_COUNT,
