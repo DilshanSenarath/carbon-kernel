@@ -155,6 +155,10 @@ public class JDBCRealmUtil {
             properties.put(JDBCRealmConstants.GET_USER_FILTER_PAGINATED_MSSQL,
                     JDBCRealmConstants.GET_USER_FILTER_PAGINATED_SQL_MSSQL);
         }
+        if (!properties.containsKey(JDBCRealmConstants.GET_USER_FILTER_PAGINATED_WITH_ID_MSSQL)) {
+            properties.put(JDBCRealmConstants.GET_USER_FILTER_PAGINATED_WITH_ID_MSSQL,
+                    JDBCRealmConstants.GET_USER_FILTER_PAGINATED_WITH_USER_ID_SQL_MSSQL);
+        }
         if (!properties.containsKey(JDBCRealmConstants.GET_USER_FILTER_PAGINATED_COUNT)) {
             properties.put(JDBCRealmConstants.GET_USER_FILTER_PAGINATED_COUNT,
                     JDBCRealmConstants.GET_USER_FILTER_PAGINATED_COUNT_SQL);
@@ -700,6 +704,10 @@ public class JDBCRealmUtil {
         if (!properties.containsKey(JDBCCaseInsensitiveConstants.GET_USER_FILTER_CASE_INSENSITIVE_PAGINATED_MSSQL)) {
             properties.put(JDBCCaseInsensitiveConstants.GET_USER_FILTER_CASE_INSENSITIVE_PAGINATED_MSSQL,
                     JDBCCaseInsensitiveConstants.GET_USER_FILTER_CASE_INSENSITIVE_PAGINATED_SQL_MSSQL);
+        }
+        if (!properties.containsKey(JDBCCaseInsensitiveConstants.GET_USER_FILTER_WITH_ID_CASE_INSENSITIVE_PAGINATED_MSSQL)) {
+            properties.put(JDBCCaseInsensitiveConstants.GET_USER_FILTER_WITH_ID_CASE_INSENSITIVE_PAGINATED_MSSQL,
+                    JDBCCaseInsensitiveConstants.GET_USER_FILTER_CASE_INSENSITIVE_PAGINATED_WITH_ID_SQL_MSSQL);
         }
         if (!properties.containsKey(JDBCCaseInsensitiveConstants.GET_USER_FILTER_CASE_INSENSITIVE_PAGINATED_ORACLE)) {
             properties.put(JDBCCaseInsensitiveConstants.GET_USER_FILTER_CASE_INSENSITIVE_PAGINATED_ORACLE,
